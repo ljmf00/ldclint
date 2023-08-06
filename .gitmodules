@@ -1,0 +1,3 @@
+[submodule "ldc"]
+	path = ldc
+	url = git@github.com:ldc-developers/ldc.git
