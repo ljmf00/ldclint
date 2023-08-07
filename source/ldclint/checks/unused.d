@@ -32,9 +32,6 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(Module m)
     {
-        // lets skip invalid modules
-        if (m is null || !m.md) return;
-
         // lets skip a module if we already visiting one
         if(context.visitingModule !is null) return;
 
@@ -43,7 +40,7 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 
         if (m.members)
             foreach(sym; *m.members)
-                sym.accept(this);
+                if (sym) sym.accept(this);
 
         foreach(sym, num; context.refs)
         {
@@ -53,24 +50,18 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
             // there is references to this symbol
             if (num > 0) continue;
 
-            warning(sym.loc, "Symbol `%s` appears to be unused", sym.toChars());
+            string prefix;
+            if (sym.isFuncDeclaration) prefix = "Function";
+            else if (sym.isVarDeclaration) prefix = "Variable";
+            else prefix = "Symbol";
+
+            warning(sym.loc, "%s `%s` appears to be unused", prefix.ptr, sym.toChars());
         }
     }
 
     override void visit(CallExp call)
     {
         ++context.refs.require(call.f);
-    }
-
-    override void visit(DotVarExp dVarExp)
-    {
-        ++context.refs.require(dVarExp.var);
-    }
-
-    override void visit(FuncExp funcExp)
-    {
-        context.refs.require(funcExp.fd);
-        context.refs.require(funcExp.td);
     }
 
     override void visit(SymbolExp symExp)
@@ -93,6 +84,7 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(FuncDeclaration fd)
     {
+
         if (fd.frequires)
             foreach (frequire; *fd.frequires)
                 frequire.accept(this);
