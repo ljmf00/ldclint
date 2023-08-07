@@ -1,0 +1,15 @@
+// RUN: ldc -w -c %s -o- --plugin=libldclint.so
+
+private int foo(int p1, int p2)
+{
+    return p1 + p2;
+}
+
+int bar(int p1)
+{
+    return foo(p1, p1 * 2);
+}
+
+void barno(int) {}
+
+__gshared int globalFoo;

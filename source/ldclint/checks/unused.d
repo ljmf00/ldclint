@@ -11,6 +11,11 @@ import dmd.id;
 import dmd.expression;
 import dmd.statement;
 
+import std.stdio;
+import std.string;
+
+version = printUnvisited;
+
 extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 {
     alias visit = SemanticTimeTransitiveVisitor.visit;
@@ -59,14 +64,24 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
         }
     }
 
-    override void visit(CallExp call)
+    override void visit(CallExp e)
     {
-        ++context.refs.require(call.f);
+        // function declaration associated to the call expression
+        if (e.f)
+            ++context.refs.require(e.f);
+        else
+            // visit the calling expression otherwise
+            e.e1.accept(this);
+
+        // go over the arguments of the call expression
+        if (e.arguments)
+            foreach(arg; *e.arguments)
+                arg.accept(this);
     }
 
-    override void visit(SymbolExp symExp)
+    override void visit(SymbolExp expr)
     {
-        ++context.refs.require(symExp.var);
+        ++context.refs.require(expr.var);
     }
 
     override void visit(Import imp)
@@ -75,15 +90,55 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
         if (imp.id == Id.object) return;
     }
 
+    override void visit(IntegerExp) { /* skip */ }
+
+    override void visit(Expression e)
+    {
+        version(printUnvisited) stderr.writefln("expression '%s': %s", e.op, fromStringz(e.toChars()));
+        super.visit(e);
+    }
+
+    override void visit(Dsymbol s)
+    {
+        version(printUnvisited) stderr.writefln("symbol '%s': %s", s.kind, fromStringz(s.toChars()));
+        super.visit(s);
+    }
+
+    override void visit(Statement s)
+    {
+        version(printUnvisited) stderr.writefln("statement '%s': %s", s.stmt, fromStringz(s.toChars()));
+        super.visit(s);
+    }
+
     override void visit(VarDeclaration vd)
     {
         super.visit(vd);
+
+        auto parent = vd.toParent();
+        if (parent && parent.isModule())
+        {
+            final switch(vd.visibility.kind)
+            {
+                case Visibility.Kind.private_:
+                case Visibility.Kind.none:
+                    break;
+
+                case Visibility.Kind.protected_:
+                case Visibility.Kind.public_:
+                case Visibility.Kind.export_:
+                case Visibility.Kind.undefined:
+                case Visibility.Kind.package_:
+                    return;
+            }
+        }
 
         context.refs.require(vd);
     }
 
     override void visit(FuncDeclaration fd)
     {
+        // FIXME: Transitive visitor has a bug
+        //super.visit(vd);
 
         if (fd.frequires)
             foreach (frequire; *fd.frequires)
@@ -98,7 +153,8 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 
         if (fd.parameters)
             foreach (param; *fd.parameters)
-                param.accept(this);
+                if (param.ident && !param.ident.toString().startsWith("_param_"))
+                    param.accept(this);
 
         if (!fd.isMain && !fd.isCMain)
         {
