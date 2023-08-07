@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  TESTS_FOLDER="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$TESTS_FOLDER/$SOURCE"
+done
+TESTS_FOLDER="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+unset SOURCE
+
+
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(readlink -f "${1-.}")"
+
+lit "$TESTS_FOLDER" -v
