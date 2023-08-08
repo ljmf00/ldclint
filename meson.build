@@ -18,6 +18,7 @@ shared_library('ldclint',
   [
     'source/ldclint/plugin.d',
     'source/ldclint/checks/unused.d',
+    'source/ldclint/checks/structs_ctor_postblit.d',
   ],
   include_directories: ldclint_incdir,
   d_module_versions: [ 'IN_LLVM' ],

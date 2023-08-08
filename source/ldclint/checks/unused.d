@@ -14,7 +14,7 @@ import dmd.statement;
 import std.stdio;
 import std.string;
 
-version = printUnvisited;
+//version = printUnvisited;
 
 extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 {
