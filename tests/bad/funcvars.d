@@ -1,4 +1,4 @@
-// RUN: ldc -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck %s
+// RUN: ldc2 -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck %s
 
 // CHECK-DAG: funcvars.d(5): Warning: Function `foo` appears to be unused
 // CHECK-DAG: funcvars.d(5): Warning: Variable `p1` appears to be unused
