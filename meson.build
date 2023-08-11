@@ -17,6 +17,7 @@ add_global_link_arguments('--fvisibility=hidden', language: 'd')
 shared_library('ldclint',
   [
     'source/ldclint/plugin.d',
+    'source/ldclint/dmd/location.d',
     'source/ldclint/checks/unused.d',
     'source/ldclint/checks/structs_ctor_postblit.d',
   ],

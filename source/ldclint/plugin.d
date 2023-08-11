@@ -2,7 +2,8 @@ module ldclint.plugin;
 
 import dmd.dmodule : Module;
 import dmd.errors;
-import dmd.location;
+
+import ldclint.dmd.location;
 
 import ldclint.checks.unused;
 import ldclint.checks.structs_ctor_postblit;
