@@ -1,6 +1,7 @@
 module ldclint.checks.unused;
 
-import dmd.visitor;
+import ldclint.visitors;
+
 import dmd.dmodule;
 import dmd.declaration;
 import dmd.dimport;
@@ -10,26 +11,30 @@ import dmd.errors;
 import dmd.id;
 import dmd.expression;
 import dmd.statement;
+import dmd.mtype;
 
 import std.stdio;
 import std.string;
+import std.array;
+import std.range;
+import std.bitmanip;
 
-//version = printUnvisited;
-
-extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
+extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
 {
-    alias visit = SemanticTimeTransitiveVisitor.visit;
+    alias visit = DFSPluginVisitor.visit;
 
     static struct Context
     {
-        /// currently module being visited
-        Module visitingModule;
-
         /// number of references of a symbol
         size_t[Dsymbol] refs;
 
         /// number of imports
         size_t[Module] imported;
+
+        mixin(bitfields!(
+            bool, "insideFunction", 1,
+            uint, null,             7,
+        ));
     }
 
     /// visit context
@@ -37,15 +42,10 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(Module m)
     {
-        // lets skip a module if we already visiting one
-        if(context.visitingModule !is null) return;
+        // lets skip invalid modules
+        if (!isValid(m)) return;
 
-        context.visitingModule = m;
-        scope(exit) context = Context.init;
-
-        if (m.members)
-            foreach(sym; *m.members)
-                if (sym) sym.accept(this);
+        super.visit(m);
 
         foreach(sym, num; context.refs)
         {
@@ -81,7 +81,20 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
 
     override void visit(SymbolExp expr)
     {
+        if (expr is null) return;
+
         ++context.refs.require(expr.var);
+    }
+
+    override void visit(ThisExp this_)
+    {
+        if (this_ is null) return;
+
+        if (this_.type !is null)
+            this_.type.accept(this);
+
+        if (this_.var !is null)
+            this_.var.accept(this);
     }
 
     override void visit(Import imp)
@@ -90,71 +103,41 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
         if (imp.id == Id.object) return;
     }
 
-    override void visit(IntegerExp) { /* skip */ }
-
-    override void visit(Expression e)
-    {
-        version(printUnvisited) stderr.writefln("expression '%s': %s", e.op, fromStringz(e.toChars()));
-        super.visit(e);
-    }
-
-    override void visit(Dsymbol s)
-    {
-        version(printUnvisited) stderr.writefln("symbol '%s': %s", s.kind, fromStringz(s.toChars()));
-        super.visit(s);
-    }
-
-    override void visit(Statement s)
-    {
-        version(printUnvisited) stderr.writefln("statement '%s': %s", s.stmt, fromStringz(s.toChars()));
-        super.visit(s);
-    }
-
     override void visit(VarDeclaration vd)
     {
+        if (!isValid(vd)) return;
+
         super.visit(vd);
 
-        auto parent = vd.toParent();
-        if (parent && parent.isModule())
+        final switch(vd.visibility.kind)
         {
-            final switch(vd.visibility.kind)
-            {
-                case Visibility.Kind.private_:
-                case Visibility.Kind.none:
-                    break;
+            case Visibility.Kind.private_:
+            case Visibility.Kind.none:
+                break;
 
-                case Visibility.Kind.protected_:
-                case Visibility.Kind.public_:
-                case Visibility.Kind.export_:
-                case Visibility.Kind.undefined:
-                case Visibility.Kind.package_:
-                    return;
-            }
+            case Visibility.Kind.protected_:
+            case Visibility.Kind.public_:
+            case Visibility.Kind.export_:
+            case Visibility.Kind.undefined:
+            case Visibility.Kind.package_:
+                if (context.insideFunction) break;
+
+                return;
         }
+
+        // variables with an underscore are ignored
+        if (vd.ident && !vd.ident.toString().startsWith("_"))
 
         context.refs.require(vd);
     }
 
     override void visit(FuncDeclaration fd)
     {
-        // FIXME: Transitive visitor has a bug
-        //super.visit(vd);
+        // lets skip invalid functions
+        if (!isValid(fd)) return;
 
-        if (fd.frequires)
-            foreach (frequire; *fd.frequires)
-                frequire.accept(this);
-
-        if (fd.fensures)
-            foreach (fensure; *fd.fensures)
-                fensure.ensure.accept(this);
-
-        if (fd.fbody)
-            fd.fbody.accept(this);
-
-        if (fd.parameters)
-            foreach (param; *fd.parameters)
-                if (param.ident && !param.ident.toString().startsWith("_param_"))
-                    param.accept(this);
+        context.insideFunction = true;
+        scope (exit) context.insideFunction = false;
 
         if (!fd.isMain && !fd.isCMain)
         {
@@ -173,5 +156,8 @@ extern(C++) final class UnusedCheckVisitor : SemanticTimeTransitiveVisitor
                     break;
             }
         }
+
+        // traverse through the AST
+        super.visit(fd);
     }
 }

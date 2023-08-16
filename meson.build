@@ -18,6 +18,7 @@ shared_library('ldclint',
   [
     'source/ldclint/plugin.d',
     'source/ldclint/dmd/location.d',
+    'source/ldclint/visitors.d',
     'source/ldclint/checks/unused.d',
     'source/ldclint/checks/structs_ctor_postblit.d',
   ],

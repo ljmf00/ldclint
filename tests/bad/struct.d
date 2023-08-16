@@ -21,3 +21,9 @@ struct Foo3
     this(ref Foo3)
     {}
 }
+
+struct Foo4
+{
+    // CHECK-DAG: struct.d(28): Warning: Variable `a` appears to be unused
+    private int a;
+}

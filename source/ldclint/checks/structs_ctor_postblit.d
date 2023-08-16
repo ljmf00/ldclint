@@ -1,5 +1,7 @@
 module ldclint.checks.structs_ctor_postblit;
 
+import ldclint.visitors;
+
 import dmd.visitor;
 import dmd.dmodule;
 import dmd.declaration;
@@ -15,21 +17,23 @@ import dmd.dstruct;
 import std.stdio;
 import std.string;
 
-//version = printUnvisited;
-
-extern(C++) final class StructCtorPostblitCheckVisitor : SemanticTimeTransitiveVisitor
+extern(C++) final class StructCtorPostblitCheckVisitor : DFSPluginVisitor
 {
-    alias visit = SemanticTimeTransitiveVisitor.visit;
+    alias visit = DFSPluginVisitor.visit;
 
-    override void visit(StructDeclaration decl)
+    override void visit(StructDeclaration sd)
     {
-        auto hasUserDefinedCopyCtor = (decl.postblits.length && !decl.postblits[0].isDisabled ? true : false)
-            || decl.hasCopyCtor;
-        auto hasUserDefinedDtors = decl.userDtors.length > 0;
+        if (!isValid(sd)) return;
+
+        super.visit(sd);
+
+        auto hasUserDefinedCopyCtor = (sd.postblits.length && !sd.postblits[0].isDisabled ? true : false)
+            || sd.hasCopyCtor;
+        auto hasUserDefinedDtors = sd.userDtors.length > 0;
 
         if (hasUserDefinedCopyCtor && !hasUserDefinedDtors)
-            warning(decl.loc, "user defined copy construction defined but no destructor");
+            warning(sd.loc, "user defined copy construction defined but no destructor");
         else if (!hasUserDefinedCopyCtor && hasUserDefinedDtors)
-            warning(decl.loc, "user defined destructor defined but no copy construction");
+            warning(sd.loc, "user defined destructor defined but no copy construction");
     }
 }
