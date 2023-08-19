@@ -321,12 +321,27 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
                 s.accept(this);
     }
 
+    override void visit(ThisExp this_)
+    {
+        // lets skip invalid structs
+        if (!isValid(this_)) { mixin(invalidReturnMixin); }
+
+        mixin(incrementLevelMixin);
+
+        if (this_.type !is null)
+            this_.type.accept(this);
+
+        if (this_.var !is null)
+            this_.var.accept(this);
+    }
+
     override void visit(FuncDeclaration fd)
     {
         // lets skip invalid functions
         if (!isValid(fd)) { mixin(invalidReturnMixin); }
 
         mixin(incrementLevelMixin);
+        debug (ast) stderr.writeln(">>> ", fromStringz(fd.toChars()));
 
         traverse(fd);
     }
@@ -1506,6 +1521,18 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         mixin(incrementLevelMixin);
 
         e.e1.accept(this);
+    }
+
+    override void visit(SliceExp e)
+    {
+        // lets skip invalid nodes
+        if (!isValid(e)) { mixin(invalidReturnMixin); }
+
+        mixin(incrementLevelMixin);
+
+        if (e.e1)  e.e1.accept(this);
+        if (e.upr) e.upr.accept(this);
+        if (e.lwr) e.lwr.accept(this);
     }
 
     override void visit(BinExp e)

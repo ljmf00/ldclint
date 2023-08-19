@@ -12,6 +12,7 @@ import dmd.id;
 import dmd.expression;
 import dmd.statement;
 import dmd.mtype;
+import dmd.astenums;
 
 import std.stdio;
 import std.string;
@@ -83,6 +84,10 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
 
     override void visit(CallExp e)
     {
+        if (!isValid(e)) return;
+
+        super.visit(e);
+
         // function declaration associated to the call expression
         if (e.f)
             context.incrementRef(e.f);
@@ -143,8 +148,22 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
                 return;
         }
 
+        // anonymous variables that doesn't have an identifier are ignored
+        if (!vd.ident) return;
+
+        auto strident = vd.ident.toString();
         // variables with an underscore are ignored
-        if (vd.ident && !vd.ident.toString().startsWith("_"))
+        if (strident.startsWith("_")) return;
+        // this special variable is ignored
+        if (strident == "this") return;
+
+        // TODO: Add tests cases for this
+        // FIXME: Use expression lookup table for enums, disable them for now
+
+        // skip temporary variables
+        if (vd.storage_class & STC.temp) return;
+        // skip enums
+        if (vd.storage_class & STC.manifest) return;
 
         context.addRef(vd);
     }
