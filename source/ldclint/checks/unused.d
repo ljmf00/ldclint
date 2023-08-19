@@ -26,7 +26,21 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
     static struct Context
     {
         /// number of references of a symbol
-        size_t[Dsymbol] refs;
+        size_t[void*] refs;
+
+        void addRef(Dsymbol s)
+        {
+            if (s is null) return;
+
+            this.refs.require(cast(void*)s);
+        }
+
+        void incrementRef(Dsymbol s)
+        {
+            if (s is null) return;
+
+            ++this.refs.require(cast(void*)s);
+        }
 
         /// number of imports
         size_t[Module] imported;
@@ -47,13 +61,16 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
 
         super.visit(m);
 
-        foreach(sym, num; context.refs)
+        foreach(osym, num; context.refs)
         {
             // skip invalid symbols
-            if (!sym) continue;
+            if (!osym) continue;
 
             // there is references to this symbol
             if (num > 0) continue;
+
+            auto sym = cast(Dsymbol)osym;
+            assert(sym, "must be a Dsymbol");
 
             string prefix;
             if (sym.isFuncDeclaration) prefix = "Function";
@@ -68,33 +85,34 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
     {
         // function declaration associated to the call expression
         if (e.f)
-            ++context.refs.require(e.f);
-        else
-            // visit the calling expression otherwise
-            e.e1.accept(this);
-
-        // go over the arguments of the call expression
-        if (e.arguments)
-            foreach(arg; *e.arguments)
-                arg.accept(this);
+            context.incrementRef(e.f);
     }
 
-    override void visit(SymbolExp expr)
+    override void visit(VarExp e)
     {
-        if (expr is null) return;
+        if (!isValid(e)) return;
 
-        ++context.refs.require(expr.var);
+        super.visit(e);
+
+        context.incrementRef(e.var);
     }
 
-    override void visit(ThisExp this_)
+    override void visit(SymOffExp e)
     {
-        if (this_ is null) return;
+        if (!isValid(e)) return;
 
-        if (this_.type !is null)
-            this_.type.accept(this);
+        super.visit(e);
 
-        if (this_.var !is null)
-            this_.var.accept(this);
+        context.incrementRef(e.var);
+    }
+
+    override void visit(SymbolExp e)
+    {
+        if (!isValid(e)) return;
+
+        super.visit(e);
+
+        context.incrementRef(e.var);
     }
 
     override void visit(Import imp)
@@ -128,7 +146,7 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
         // variables with an underscore are ignored
         if (vd.ident && !vd.ident.toString().startsWith("_"))
 
-        context.refs.require(vd);
+        context.addRef(vd);
     }
 
     override void visit(FuncDeclaration fd)
@@ -145,7 +163,7 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
             {
                 case Visibility.Kind.private_:
                 case Visibility.Kind.none:
-                    context.refs.require(fd);
+                    context.addRef(fd);
                     break;
 
                 case Visibility.Kind.protected_:
