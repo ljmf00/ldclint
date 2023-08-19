@@ -27,4 +27,5 @@ shared_library('ldclint',
   ],
   include_directories: ldclint_incdir,
   d_module_versions: [ 'IN_LLVM' ],
+  install: true,
 )
