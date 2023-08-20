@@ -14,10 +14,12 @@
 
     // CHECK-DAG: func.d(16): Warning: Variable `gf` appears to be unused
     __gshared int gf;
-}
 
-// CHECK-DAG: func.d(20): Warning: Variable `globalFoobar` appears to be unused
+// CHECK-DAG: func.d(19): Warning: Empty declaration
+};
+
+// CHECK-DAG: func.d(22): Warning: Variable `globalFoobar` appears to be unused
 private __gshared int globalFoobar;
 
-// CHECK-DAG: func.d(23): Warning: Redundant attribute `static` and `__gshared`
+// CHECK-DAG: func.d(25): Warning: Redundant attribute `static` and `__gshared`
 static __gshared int redundantAttr;
