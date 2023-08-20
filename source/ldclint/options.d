@@ -45,6 +45,9 @@ void tryParseOptions(out Options options)
             case "-Wunused":    options.unusedCheck = true;  break;
             case "-Wno-unused": options.unusedCheck = false; break;
 
+            case "-Wparser":    options.parserCheck = true;  break;
+            case "-Wno-parser": options.parserCheck = false; break;
+
             case "-Wstruct-ctorpostblit":    options.structCtorPostblitCheck = true;  break;
             case "-Wno-struct-ctorpostblit": options.structCtorPostblitCheck = false; break;
 
