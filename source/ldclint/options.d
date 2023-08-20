@@ -20,6 +20,9 @@ struct Options
 
     /// whether to run parser checks
     bool parserCheck = true;
+
+    /// whether to warn about @property usage
+    bool atPropertyCheck = false;
 }
 
 void setAll(ref Options options, bool value)
@@ -50,6 +53,9 @@ void tryParseOptions(out Options options)
 
             case "-Wstruct-ctorpostblit":    options.structCtorPostblitCheck = true;  break;
             case "-Wno-struct-ctorpostblit": options.structCtorPostblitCheck = false; break;
+
+            case "-Watproperty":    options.atPropertyCheck = true;  break;
+            case "-wno-atproperty": options.atPropertyCheck = false; break;
 
             default:
                 throw new InvalidOptionsException(args.front);
