@@ -20,6 +20,7 @@ add_global_link_arguments('--fvisibility=hidden', language: 'd')
 shared_library('ldclint',
   [
     'source/ldclint/plugin.d',
+    'source/ldclint/options.d',
     'source/ldclint/dmd/location.d',
     'source/ldclint/visitors.d',
     'source/ldclint/checks/unused.d',
