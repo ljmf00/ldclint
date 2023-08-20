@@ -35,4 +35,16 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
         // traverse through the AST
         super.visit(vd);
     }
+
+    override void visit(AssignExp e)
+    {
+        // lets skip invalid assignments
+        if (!isValid(e)) return;
+
+        // don't warn about null expressions
+        if (!e.e1 || !e.e2) return;
+
+        if (e.e1.isIdentical(e.e2))
+            warning(e.loc, "Redundant assignment of expression `%s`", e.e1.toChars());
+    }
 }

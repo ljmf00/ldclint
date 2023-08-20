@@ -8,12 +8,16 @@
     // CHECK-DAG: func.d(9): Warning: Variable `f` appears to be unused
     auto f = 1;
 
-    // CHECK-DAG: func.d(12): Warning: Variable `gf` appears to be unused
+    auto r = 2;
+    // CHECK-DAG: func.d(13): Warning: Redundant assignment of expression `r`
+    r = r;
+
+    // CHECK-DAG: func.d(16): Warning: Variable `gf` appears to be unused
     __gshared int gf;
 }
 
-// CHECK-DAG: func.d(16): Warning: Variable `globalFoobar` appears to be unused
+// CHECK-DAG: func.d(20): Warning: Variable `globalFoobar` appears to be unused
 private __gshared int globalFoobar;
 
-// CHECK-DAG: func.d(19): Warning: Redundant attribute `static` and `__gshared`
+// CHECK-DAG: func.d(23): Warning: Redundant attribute `static` and `__gshared`
 static __gshared int redundantAttr;
