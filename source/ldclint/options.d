@@ -23,6 +23,9 @@ struct Options
 
     /// whether to warn about @property usage
     bool atPropertyCheck = false;
+
+    /// whether to warn about redundancy
+    bool redundantCheck = true;
 }
 
 void setAll(ref Options options, bool value)
@@ -56,6 +59,9 @@ void tryParseOptions(out Options options)
 
             case "-Watproperty":    options.atPropertyCheck = true;  break;
             case "-wno-atproperty": options.atPropertyCheck = false; break;
+
+            case "-Wredundant":    options.redundantCheck = true;  break;
+            case "-Wno-redundant": options.redundantCheck = false; break;
 
             default:
                 throw new InvalidOptionsException(args.front);
