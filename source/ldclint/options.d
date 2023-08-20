@@ -17,6 +17,9 @@ struct Options
 
     /// whether to run the struct ctor/postblit check
     bool structCtorPostblitCheck = true;
+
+    /// whether to run parser checks
+    bool parserCheck = true;
 }
 
 void setAll(ref Options options, bool value)
