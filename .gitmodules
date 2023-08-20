@@ -1,3 +1,6 @@
 [submodule "ldc"]
 	path = ldc
 	url = git@github.com:ldc-developers/ldc.git
+[submodule "libdparse"]
+	path = libdparse
+	url = https://github.com/ljmf00/libdparse.git
