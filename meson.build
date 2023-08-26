@@ -1,9 +1,10 @@
-project('ldclint', 'd', version: '0.0.1')
+project('ldclint', ['c','d'], version: '0.0.1')
 
 fs = import('fs')
 
 run_command('buildenv/fetch-ldc-source', check: true)
 
+cc = meson.get_compiler('c')
 dcompiler = meson.get_compiler('d')
 
 ldclint_incdir = include_directories('source')
@@ -72,14 +73,15 @@ ldclint_core_dep = declare_dependency(
   dependencies: [ dparse_dep ],
 )
 
+phobos2_ldc_dep = cc.find_library('phobos2-ldc', static: true)
+
 ldclint_lib = shared_library('ldclint-' + dcompiler.version(),
   [
     'source/ldclint/plugin.d',
   ],
-  dependencies: [ ldclint_core_dep ],
+  dependencies: [ ldclint_core_dep, phobos2_ldc_dep ],
   include_directories: ldclint_incdir,
   d_module_versions: [ 'IN_LLVM' ],
-  link_args: [ '-lphobos2-ldc' ],
   install: true,
   version: meson.project_version(),
 )
