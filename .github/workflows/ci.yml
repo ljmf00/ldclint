@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 'Build'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+        dc:
+          - ldc-1.33.0
+        arch:
+          - 'x86_64'
+
+    runs-on: ${{ matrix.os }}
+    steps:
+
+    # Install required dependencies
+    - name: '[OSX] Install dependencies'
+      if: runner.os == 'macOS'
+      run: |
+        brew install pkg-config coreutils
+        echo "PKG_CONFIG_PATH=/usr/local/opt/openssl@1.1/lib/pkgconfig/" >> $GITHUB_ENV
+
+    - name: '[Linux] Install dependencies'
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev netcat \
+          llvm-15-tools llvm-15-dev libclang-common-15-dev ninja-build
+        sudo ln -sf /usr/bin/FileCheck-15 /usr/bin/FileCheck
+
+    # Compiler to test with
+    - name: Prepare compiler
+      uses: dlang-community/setup-dlang@v1
+      with:
+        compiler: ${{ matrix.dc }}
+
+    # Checkout the repository
+    - uses: actions/checkout@v3.5.3
+      with:
+        submodules: 'recursive'
+
+    - uses: actions/setup-python@v4.7.0
+      with:
+        python-version: 'pypy3.9'
+
+    - name: 'Prepare'
+      run: |
+        pip install meson lit
+        mkdir -p builddir/ldc-runtimes
+        ldc-build-runtime --buildDir ./builddir/ldc-runtimes
+
+        export LIBRARY_PATH="$LIBRARY_PATH:$(readlink -f ./builddir/ldc-runtimes/lib)"
+        export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(readlink -f ./builddir/ldc-runtimes/lib)"
+
+        mkdir -p builddir/installdir
+        meson setup --prefix "$(pwd)/builddir/installdir" builddir .
+      shell: bash
+
+    - name: 'Build'
+      run: ninja -C builddir install
+
+    - name: 'Test'
+      run: |
+        ninja -C builddir test
+        ./tests/run "$(dirname "$(find builddir/installdir/ -name 'libldclint.so')")"
+      shell: bash
