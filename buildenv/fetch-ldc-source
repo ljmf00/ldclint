@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+shopt -s dotglob
+
+LDC_VERSION="$("${DC-ldc2}" --version | head -n1 | sed 's/^LDC - .*(\(.*\)):$/\1/')"
+
+MESON_BUILD_ROOT="${MESON_BUILD_ROOT-builddir}"
+
+mkdir -p "$MESON_BUILD_ROOT"
+
+if [ -d "$MESON_BUILD_ROOT/ldc-src" ]; then
+    exit 0
+fi
+
+if [ "$LDC_VERSION" == *weka* ]; then
+    curl -L "https://github.com/weka/ldc/releases/download/v$LDC_VERSION/ldc-$LDC_VERSION-src.tar.gz" \
+	| tar xvz -C "$MESON_BUILD_ROOT"
+else
+    curl -L "https://github.com/ldc-developers/ldc/releases/download/v$LDC_VERSION/ldc-$LDC_VERSION-src.tar.gz" \
+	| tar xvz -C "$MESON_BUILD_ROOT"
+fi
+
+rm -rf "$MESON_BUILD_ROOT/ldc-src"
+mv -v "$MESON_BUILD_ROOT/ldc-$LDC_VERSION-src" "$MESON_BUILD_ROOT/ldc-src"

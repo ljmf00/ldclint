@@ -1,11 +1,17 @@
-project('ldclint', 'd')
+project('ldclint', 'd', version: '0.0.1')
+
+fs = import('fs')
+
+run_command('buildenv/fetch-ldc-source', check: true)
+
+dcompiler = meson.get_compiler('d')
 
 ldclint_incdir = include_directories('source')
 
-add_global_arguments('-J' + meson.current_source_dir() + '/ldc/dmd/res', language: 'd')
-add_global_arguments('-I' + meson.current_source_dir() + '/ldc', language: 'd')
-add_global_arguments('-I' + meson.current_source_dir() + '/ldc/runtime/druntime/src', language: 'd')
-add_global_arguments('-I' + meson.current_source_dir() + '/ldc/runtime/phobos', language: 'd')
+add_global_arguments('-J' + meson.current_build_dir() + '/ldc-src/dmd/res', language: 'd')
+add_global_arguments('-I' + meson.current_build_dir() + '/ldc-src', language: 'd')
+add_global_arguments('-I' + meson.current_build_dir() + '/ldc-src/runtime/druntime/src', language: 'd')
+add_global_arguments('-I' + meson.current_build_dir() + '/ldc-src/runtime/phobos', language: 'd')
 
 add_global_arguments('--conf=', language: 'd')
 add_global_link_arguments('--conf=', language: 'd')
@@ -66,7 +72,7 @@ ldclint_core_dep = declare_dependency(
   dependencies: [ dparse_dep ],
 )
 
-shared_library('ldclint',
+ldclint_lib = shared_library('ldclint-' + dcompiler.version(),
   [
     'source/ldclint/plugin.d',
   ],
@@ -75,4 +81,19 @@ shared_library('ldclint',
   d_module_versions: [ 'IN_LLVM' ],
   link_args: [ '-lphobos2-ldc' ],
   install: true,
+  version: meson.project_version(),
+)
+
+ldclint_lib_name = fs.name(ldclint_lib.full_path())
+if 'dll' in ldclint_lib_name
+  ldclint_ext = 'dll'
+elif 'dylib' in ldclint_lib_name
+  ldclint_ext = 'dylib'
+else
+  ldclint_ext = 'so'
+endif
+
+install_symlink('libldclint.' + ldclint_ext,
+  install_dir: 'lib',
+  pointing_to: ldclint_lib_name
 )
