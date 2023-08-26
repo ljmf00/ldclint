@@ -96,6 +96,6 @@ else
 endif
 
 install_symlink('libldclint.' + ldclint_ext,
-  install_dir: 'lib',
+  install_dir: get_option('libdir'),
   pointing_to: ldclint_lib_name
 )
