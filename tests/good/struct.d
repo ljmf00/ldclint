@@ -10,3 +10,14 @@ struct Foo3
     double b;
     real c;
 }
+
+struct Foo4
+{
+    this (int a) { this.a = a; }
+    int foo()
+    {
+        return a;
+    }
+
+    private int a;
+}

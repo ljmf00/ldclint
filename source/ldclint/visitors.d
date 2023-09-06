@@ -1595,6 +1595,20 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         e.e1.accept(this);
     }
 
+    override void visit(DotVarExp e)
+    {
+        // lets skip invalid nodes
+        if (!isValid(e)) { mixin(invalidReturnMixin); }
+
+        mixin(incrementLevelMixin);
+
+        if (e.e1)
+            e.e1.accept(this);
+
+        if (e.var)
+            e.var.accept(this);
+    }
+
     override void visit(DotTemplateInstanceExp e)
     {
         // lets skip invalid nodes
