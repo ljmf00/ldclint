@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -xe
 shopt -s dotglob
 
 LDC_VERSION="$("${DC-ldc2}" --version | head -n1 | sed 's/^LDC - .*(\(.*\)):$/\1/')"
