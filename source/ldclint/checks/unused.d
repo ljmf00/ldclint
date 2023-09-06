@@ -1,6 +1,7 @@
 module ldclint.checks.unused;
 
 import ldclint.visitors;
+import ldclint.scopetracker;
 
 import dmd.dmodule;
 import dmd.declaration;
@@ -54,11 +55,16 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
 
     /// visit context
     Context context;
+    /// scope tracker
+    ScopeTracker scopeTracker;
 
     override void visit(Module m)
     {
         // lets skip invalid modules
         if (!isValid(m)) return;
+
+        auto sc = scopeTracker.track(m);
+        scope(exit) scopeTracker.untrack(m, sc);
 
         super.visit(m);
 
@@ -150,6 +156,9 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
 
         super.visit(vd);
 
+        auto sc = scopeTracker.track(vd);
+        scope(exit) scopeTracker.untrack(vd, sc);
+
         final switch(vd.visibility.kind)
         {
             case Visibility.Kind.private_:
@@ -161,7 +170,7 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
             case Visibility.Kind.export_:
             case Visibility.Kind.undefined:
             case Visibility.Kind.package_:
-                if (context.insideFunction) break;
+                if (scopeTracker.functionDepth > 0) break;
 
                 return;
         }
@@ -191,8 +200,8 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
         // lets skip invalid functions
         if (!isValid(fd)) return;
 
-        context.insideFunction = true;
-        scope (exit) context.insideFunction = false;
+        auto sc = scopeTracker.track(fd);
+        scope(exit) scopeTracker.untrack(fd, sc);
 
         if (!fd.isMain && !fd.isCMain)
         {
