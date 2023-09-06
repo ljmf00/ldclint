@@ -102,6 +102,24 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
         context.incrementRef(e.var);
     }
 
+    override void visit(ThisExp e)
+    {
+        if (!isValid(e)) return;
+
+        super.visit(e);
+
+        context.incrementRef(e.var);
+    }
+
+    override void visit(DotVarExp e)
+    {
+        if (!isValid(e)) return;
+
+        super.visit(e);
+
+        context.incrementRef(e.var);
+    }
+
     override void visit(SymOffExp e)
     {
         if (!isValid(e)) return;
