@@ -953,9 +953,16 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         mixin(incrementLevelMixin);
 
         s.exp.accept(this);
-        if (s.msgs)
-            foreach (m; (*s.msgs)[])
-                m.accept(this);
+        static if (__traits(compiles, s.msgs))
+        {
+            if (s.msgs)
+                foreach (m; (*s.msgs)[])
+                    m.accept(this);
+        }
+        else
+        {
+            if (s.msg) s.msg.accept(this);
+        }
     }
 
     override void visit(EnumMember em)
