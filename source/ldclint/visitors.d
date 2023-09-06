@@ -1093,21 +1093,22 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         traverse(cast(AttribDeclaration)d);
     }
 
-    override void visit(TemplateDeclaration d)
+    override void visit(TemplateDeclaration td)
     {
         // lets skip invalid nodes
-        if (!isValid(d)) { mixin(invalidReturnMixin); }
+        if (!isValid(td)) { mixin(invalidReturnMixin); }
 
         mixin(incrementLevelMixin);
+        debug (ast) stderr.writeln(">>> ", fromStringz(td.toChars()));
 
-        if (traverse(d))
+        if (traverse(td))
             return;
 
-        traverse(d.parameters);
-        if (d.constraint)
-            d.constraint.accept(this);
+        traverse(td.parameters);
+        if (td.constraint)
+            td.constraint.accept(this);
 
-        foreach (s; *d.members)
+        foreach (s; *td.members)
             s.accept(this);
     }
 
