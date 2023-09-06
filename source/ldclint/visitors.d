@@ -34,6 +34,15 @@ import std.string;
 import std.range;
 import std.array;
 
+// compatibility with old compiler
+static if (!is(MixinStatement) || !is(MixinDeclaration))
+{
+    ///
+    alias MixinStatement = CompileStatement;
+    ///
+    alias MixinDeclaration = CompileDeclaration;
+}
+
 // debug = ast;
 
 extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
@@ -619,7 +628,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
             c.handler.accept(this);
     }
 
-    override void visit(CompileStatement s)
+    override void visit(MixinStatement s)
     {
         // lets skip invalid nodes
         if (!isValid(s)) { mixin(invalidReturnMixin); }
@@ -1079,7 +1088,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
                     de.accept(this);
     }
 
-    override void visit(CompileDeclaration d)
+    override void visit(MixinDeclaration d)
     {
         // lets skip invalid nodes
         if (!isValid(d)) { mixin(invalidReturnMixin); }
