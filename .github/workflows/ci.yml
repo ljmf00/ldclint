@@ -22,6 +22,7 @@ jobs:
         os: [ ubuntu-latest ]
         dc:
           - ldc-1.33.0
+          - ldc-1.34.0
         arch:
           - 'x86_64'
 
