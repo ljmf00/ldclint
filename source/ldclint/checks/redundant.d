@@ -37,7 +37,12 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
         super.visit(vd);
     }
 
-    override void visit(AssignExp e)
+    override void visit(IdentityExp e) { visitBinExp(e); }
+    override void visit(EqualExp e)    { visitBinExp(e); }
+    override void visit(CmpExp e)      { visitBinExp(e); }
+    override void visit(AssignExp e)   { visitBinExp(e); }
+
+    private void visitBinExp(E)(E e)
     {
         // lets skip invalid assignments
         if (!isValid(e)) return;
@@ -46,6 +51,8 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
         if (!e.e1 || !e.e2) return;
 
         if (isIdenticalASTNodes(e.e1, e.e2))
-            warning(e.loc, "Redundant assignment of expression `%s`", e.e1.toChars());
+            warning(e.loc, "Redundant expression `%s`", e.toChars());
+
+        super.visit(e);
     }
 }
