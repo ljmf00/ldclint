@@ -20,6 +20,10 @@ int foo(int p1)
     ret |= p1 is p1;
     // CHECK-DAG: redundant.d(22): Warning: Redundant expression `p1 !is p1`
     ret |= p1 !is p1;
+    // CHECK-DAG: redundant.d(24): Warning: Redundant expression `p1 && p1`
+    ret |= p1 && p1;
+    // CHECK-DAG: redundant.d(26): Warning: Redundant expression `p1 || p1`
+    ret |= p1 || p1;
 
     return ret;
 }

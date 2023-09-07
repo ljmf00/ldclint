@@ -41,6 +41,7 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
     override void visit(EqualExp e)    { visitBinExp(e); }
     override void visit(CmpExp e)      { visitBinExp(e); }
     override void visit(AssignExp e)   { visitBinExp(e); }
+    override void visit(LogicalExp e)  { visitBinExp(e); }
 
     private void visitBinExp(E)(E e)
     {
