@@ -9,7 +9,7 @@
     auto f = 1;
 
     auto r = 2;
-    // CHECK-DAG: func.d(13): Warning: Redundant assignment of expression `r`
+    // CHECK-DAG: func.d(13): Warning: Redundant expression `r = r`
     r = r;
 
     // CHECK-DAG: func.d(16): Warning: Variable `gf` appears to be unused
