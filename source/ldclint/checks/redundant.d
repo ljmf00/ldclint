@@ -1,6 +1,7 @@
 module ldclint.checks.redundant;
 
 import ldclint.visitors;
+import ldclint.dmd.astutility;
 
 import dmd.dmodule;
 import dmd.declaration;
@@ -44,15 +45,7 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
         // don't warn about null expressions
         if (!e.e1 || !e.e2) return;
 
-        static if (__traits(compiles, e.e1.isIdentical(e.e2)))
-        {
-            if (e.e1.isIdentical(e.e2))
-                warning(e.loc, "Redundant assignment of expression `%s`", e.e1.toChars());
-        }
-        else
-        {
-            if (e.e1.equals(e.e2))
-                warning(e.loc, "Redundant assignment of expression `%s`", e.e1.toChars());
-        }
+        if (isIdenticalASTNodes(e.e1, e.e2))
+            warning(e.loc, "Redundant assignment of expression `%s`", e.e1.toChars());
     }
 }
