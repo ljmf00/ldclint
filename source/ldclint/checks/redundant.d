@@ -37,6 +37,18 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
         super.visit(vd);
     }
 
+    override void visit(FuncDeclaration fd)
+    {
+        // lets skip invalid function declarations
+        if (!isValid(fd)) return;
+
+        if (fd.storage_class & STC.final_ && fd.visibility.kind == Visibility.Kind.private_)
+            warning(fd.loc, "Redundant attribute `final` with `private` visibility");
+
+        // traverse through the AST
+        super.visit(fd);
+    }
+
     override void visit(IdentityExp e) { visitBinExp(e); }
     override void visit(EqualExp e)    { visitBinExp(e); }
     override void visit(CmpExp e)      { visitBinExp(e); }
