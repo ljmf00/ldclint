@@ -1858,6 +1858,21 @@ extern(C++) class DFSPluginVisitor : SafeTransitiveVisitor
         if (fd.isGenerated) return false;
         // skip naked functions due to high possibility of false positives
         if (fd.isNaked) return false;
+        // skip symbols that are not from the module we are visiting
+        auto mod = fd.getModule();
+        if (mod && mod != this.mod) return false;
+
+        // valid otherwise
+        return true;
+    }
+
+    override bool isValid(Dsymbol s)
+    {
+        if (!super.isValid(s)) return false;
+
+        // skip symbols that are not from the module we are visiting
+        auto mod = s.getModule();
+        if (mod && mod != this.mod) return false;
 
         // valid otherwise
         return true;
