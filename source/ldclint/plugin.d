@@ -14,6 +14,8 @@ import ldclint.checks.atproperty;
 import ldclint.checks.redundant;
 import ldclint.checks.stack;
 
+import ldclint.visitors;
+
 __gshared Options options;
 
 pragma(crt_constructor)
@@ -27,6 +29,7 @@ export extern(C) void runSemanticAnalysis(Module m)
     if (!m) return;
 
     if (options.parserCheck)             dparseModule(options, m);
+    if (options.debug_)                  m.accept(new DFSPluginVisitor());
 
     if (options.unusedCheck)             m.accept(new UnusedCheckVisitor());
     if (options.structCtorPostblitCheck) m.accept(new StructCtorPostblitCheckVisitor());

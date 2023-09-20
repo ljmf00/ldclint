@@ -3,6 +3,7 @@ module ldclint.options;
 import std.exception;
 import std.process;
 import std.array;
+import std.string;
 import std.conv : to;
 
 class InvalidOptionsException : Exception
@@ -33,13 +34,16 @@ struct Options
 
     /// max variable stack size;
     size_t maxVariableStackSize = 256;
+
+    /// debug plugin (dummy AST traversal, ...)
+    bool debug_ = false;
 }
 
 void setAll(ref Options options, bool value)
 {
     static foreach(i, _; Options.tupleof)
     {
-        static if (is(typeof(_) == bool))
+        static if (is(typeof(_) == bool) && __traits(identifier, options.tupleof[i]).endsWith("Check"))
             options.tupleof[i] = value;
     }
 }
@@ -52,6 +56,8 @@ void tryParseOptions(out Options options)
     {
         switch(args.front)
         {
+            case "--debug": options.debug_ = true;  break;
+
             case "-Wall":    options.setAll(true);  break;
             case "-Wno-all": options.setAll(false); break;
 
