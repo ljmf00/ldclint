@@ -27,8 +27,11 @@ extern(C++) final class StructCtorPostblitCheckVisitor : DFSPluginVisitor
 
         super.visit(sd);
 
-        auto hasUserDefinedCopyCtor = (sd.postblits.length && !sd.postblits[0].isDisabled ? true : false)
-            || sd.hasCopyCtor;
+        // skip structs that have disabled postblits
+        if (sd.postblits.length && sd.postblits[0].isDisabled)
+            return;
+
+        auto hasUserDefinedCopyCtor = sd.postblits.length || sd.hasCopyCtor;
         auto hasUserDefinedDtors = sd.userDtors.length > 0;
 
         if (hasUserDefinedCopyCtor && !hasUserDefinedDtors)
