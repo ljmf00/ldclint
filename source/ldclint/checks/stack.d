@@ -32,6 +32,9 @@ extern(C++) final class StackCheckVisitor : DFSPluginVisitor
 
         auto sc = scopeTracker.track(fd);
         scope(exit) scopeTracker.untrack(fd, sc);
+
+        // traverse through the AST
+        super.visit(fd);
     }
 
     override void visit(VarDeclaration vd)
