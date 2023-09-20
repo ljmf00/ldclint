@@ -12,6 +12,7 @@ import ldclint.checks.unused;
 import ldclint.checks.structs_ctor_postblit;
 import ldclint.checks.atproperty;
 import ldclint.checks.redundant;
+import ldclint.checks.stack;
 
 __gshared Options options;
 
@@ -31,4 +32,5 @@ export extern(C) void runSemanticAnalysis(Module m)
     if (options.structCtorPostblitCheck) m.accept(new StructCtorPostblitCheckVisitor());
     if (options.atPropertyCheck)         m.accept(new AtPropertyCheckVisitor());
     if (options.redundantCheck)          m.accept(new RedundantCheckVisitor());
+    if (options.stackCheck)              m.accept(new StackCheckVisitor(&options));
 }
