@@ -3,6 +3,7 @@ module ldclint.options;
 import std.exception;
 import std.process;
 import std.array;
+import std.conv : to;
 
 class InvalidOptionsException : Exception
 {
@@ -26,6 +27,12 @@ struct Options
 
     /// whether to warn about redundancy
     bool redundantCheck = true;
+
+    /// whether to warn about stack polution (huge variables, ...)
+    bool stackCheck = true;
+
+    /// max variable stack size;
+    size_t maxVariableStackSize = 256;
 }
 
 void setAll(ref Options options, bool value)
@@ -62,6 +69,18 @@ void tryParseOptions(out Options options)
 
             case "-Wredundant":    options.redundantCheck = true;  break;
             case "-Wno-redundant": options.redundantCheck = false; break;
+
+            case "-Wstack":        options.stackCheck = true;  break;
+            case "-Wno-stack":     options.stackCheck = false; break;
+
+            case "--max-var-stack-size":
+                auto argName = args.front;
+                args.popFront();
+
+                if (args.empty) throw new InvalidOptionsException("expected a number argument for " ~ argName);
+
+                options.maxVariableStackSize = args.front.to!size_t;
+                break;
 
             default:
                 throw new InvalidOptionsException(args.front);
