@@ -1452,11 +1452,9 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        if (e.thisexp)
-            e.thisexp.accept(this);
-        traverse(e.arguments);
-        if (e.cd)
-            e.cd.accept(this);
+        if (e.thisexp) e.thisexp.accept(this);
+        if (e.arguments) traverse(e.arguments);
+        if (e.cd) e.cd.accept(this);
     }
 
     override void visit(TupleExp e)
@@ -1466,9 +1464,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        if (e.e0)
-            e.e0.accept(this);
-        traverse(e.exps);
+        if (e.e0) e.e0.accept(this);
+        if (e.exps) traverse(e.exps);
     }
 
     override void visit(FuncExp e)
@@ -1478,7 +1475,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.fd.accept(this);
+        if (e.fd) e.fd.accept(this);
     }
 
     override void visit(DeclarationExp e)
@@ -1487,6 +1484,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         if (!isValid(e)) { mixin(invalidReturnMixin); }
 
         mixin(incrementLevelMixin);
+
+        if (e.declaration is null) return;
 
         if (auto v = e.declaration.isVarDeclaration())
             traverse(v);
@@ -1537,7 +1536,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(SliceExp e)
@@ -1559,8 +1558,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
-        e.e2.accept(this);
+        if (e.e1) e.e1.accept(this);
+        if (e.e2) e.e2.accept(this);
     }
 
     override void visit(MixinExp e)
@@ -1570,7 +1569,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        traverse(e.exps);
+        if (e.exps) traverse(e.exps);
     }
 
     override void visit(ImportExp e)
@@ -1580,7 +1579,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(AssertExp e)
@@ -1590,9 +1589,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
-        if (e.msg)
-            e.msg.accept(this);
+        if (e.e1) e.e1.accept(this);
+        if (e.msg) e.msg.accept(this);
     }
 
     override void visit(DotIdExp e)
@@ -1602,7 +1600,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(DotVarExp e)
@@ -1612,11 +1610,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        if (e.e1)
-            e.e1.accept(this);
-
-        if (e.var)
-            e.var.accept(this);
+        if (e.e1) e.e1.accept(this);
+        if (e.var) e.var.accept(this);
     }
 
     override void visit(DotTemplateInstanceExp e)
@@ -1626,8 +1621,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
-        e.ti.accept(this);
+        if (e.e1) e.e1.accept(this);
+        if (e.ti) e.ti.accept(this);
     }
 
     override void visit(CallExp e)
@@ -1637,8 +1632,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
-        traverse(e.arguments);
+        if (e.e1) e.e1.accept(this);
+        if (e.arguments) traverse(e.arguments);
     }
 
     override void visit(PtrExp e)
@@ -1648,7 +1643,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(DeleteExp e)
@@ -1658,7 +1653,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(CastExp e)
@@ -1668,9 +1663,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        if (e.to)
-            traverse(e.to);
-        e.e1.accept(this);
+        if (e.to) traverse(e.to);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(IntervalExp e)
@@ -1680,8 +1674,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.lwr.accept(this);
-        e.upr.accept(this);
+        if (e.lwr) e.lwr.accept(this);
+        if (e.upr) e.upr.accept(this);
     }
 
     override void visit(ArrayExp e)
@@ -1691,8 +1685,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
-        traverse(e.arguments);
+        if (e.e1) e.e1.accept(this);
+        if (e.arguments) traverse(e.arguments);
     }
 
     override void visit(PostExp e)
@@ -1702,7 +1696,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(CondExp e)
@@ -1712,9 +1706,9 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.econd.accept(this);
-        e.e1.accept(this);
-        e.e2.accept(this);
+        if (e.econd) e.econd.accept(this);
+        if (e.e1) e.e1.accept(this);
+        if (e.e2) e.e2.accept(this);
     }
 
     override void visit(GenericExp e)
@@ -1724,7 +1718,8 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.cntlExp.accept(this);
+        if (e.cntlExp) e.cntlExp.accept(this);
+
         foreach (i; 0 .. (*e.types).length)
         {
             if (auto t = (*e.types)[i])  // null means default case
@@ -1740,7 +1735,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        e.e1.accept(this);
+        if (e.e1) e.e1.accept(this);
     }
 
     override void visit(TemplateTypeParameter tp)
@@ -1803,7 +1798,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 
         mixin(incrementLevelMixin);
 
-        c.exp.accept(this);
+        if (c.exp) c.exp.accept(this);
     }
 
     override void visit(Parameter p)
