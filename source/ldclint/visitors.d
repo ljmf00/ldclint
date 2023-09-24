@@ -195,15 +195,15 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         }
     }
 
-    protected extern(D) final void traverse(Array!(Parameter)* params)
+    protected extern(D) final void traverse(T)(Array!(T)* arr)
     {
         mixin(incrementLevelMixin);
 
-        if (params is null) return;
+        if (arr is null) return;
 
-        foreach (p; *params)
-            if (p)
-                p.accept(this);
+        foreach (el; *arr)
+            if (el)
+                el.accept(this);
     }
 
     protected extern(D) final void traverse(Array!(Expression)* expressions, Expression basis = null)
@@ -236,10 +236,7 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         if (fd.fbody)
             fd.fbody.accept(this);
 
-        if (fd.parameters)
-            foreach (param; *fd.parameters)
-                if (param)
-                    param.accept(this);
+        traverse(fd.parameters);
     }
 
     void traverse(ClassDeclaration d)
@@ -1611,7 +1608,6 @@ extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
         mixin(incrementLevelMixin);
 
         if (e.e1) e.e1.accept(this);
-        if (e.var) e.var.accept(this);
     }
 
     override void visit(DotTemplateInstanceExp e)
