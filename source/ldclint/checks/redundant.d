@@ -64,7 +64,7 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
         if (!e.e1 || !e.e2) return;
 
         // skip rvalues from this check
-        if (!e.e1.isLvalue || !e.e2.isLvalue) return;
+        if (!isLvalue(e.e1) || !isLvalue(e.e2)) return;
 
         if (isIdenticalASTNodes(e.e1, e.e2))
             warning(e.loc, "Redundant expression `%s`", e.toChars());

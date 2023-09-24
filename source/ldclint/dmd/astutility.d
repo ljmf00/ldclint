@@ -1,5 +1,7 @@
 module ldclint.dmd.astutility;
 
+import dmd.expression;
+
 bool isIdenticalASTNodes(T, U)(T lhs, U rhs)
 {
     static if (__traits(isSame, T, U) || is(T : U) || is(U : T))
@@ -22,4 +24,25 @@ bool isIdenticalASTNodes(T, U)(T lhs, U rhs)
         return rhs == lhs;
     else
         return false;
+}
+
+bool isLvalue(T)(T t)
+{
+    static if (is(T : Expression))
+    {
+        if (auto ce = t.isCallExp())
+        {
+            // assume its not when we don't even know the expression
+            if (!ce.e1) return false;
+
+            // the type is not resolved, we say its not
+            if (!ce.e1.type) return false;
+
+            return ce.isLvalue();
+        }
+
+        return t.isLvalue();
+    }
+    // assume its not
+    else return false;
 }
