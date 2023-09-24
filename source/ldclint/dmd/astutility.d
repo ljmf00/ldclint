@@ -52,18 +52,10 @@ bool isLvalue(T)(T t)
     static if (is(T : Expression))
     {
         Expression e = t;
+        // skip unresolved expressions
+        if (!isResolved(e)) return false;
 
-        if (auto ce = e.isCallExp())
-        {
-            // assume its not when we don't even know the expression
-            if (!ce.e1) return false;
-
-            // the type is not resolved, we say its not
-            if (!ce.e1.type) return false;
-
-            return ce.isLvalue();
-        }
-
+        // check
         return e.isLvalue();
     }
     // assume its not
