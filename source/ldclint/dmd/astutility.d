@@ -26,11 +26,34 @@ bool isIdenticalASTNodes(T, U)(T lhs, U rhs)
         return false;
 }
 
+bool isResolved(T)(T t)
+{
+    if (!t) return false;
+
+    static if (is(T : Expression))
+    {
+        Expression e = t;
+        // type need to exist to be resolved
+        if (!e.type) return false;
+
+        if (auto ue = e.isUnaExp())
+            return isResolved(ue.e1);
+        else if (auto be = e.isBinExp())
+            return isResolved(be.e1) && isResolved(be.e2);
+        else
+            return true;
+    }
+    // assume it is
+    else return true;
+}
+
 bool isLvalue(T)(T t)
 {
     static if (is(T : Expression))
     {
-        if (auto ce = t.isCallExp())
+        Expression e = t;
+
+        if (auto ce = e.isCallExp())
         {
             // assume its not when we don't even know the expression
             if (!ce.e1) return false;
@@ -41,7 +64,7 @@ bool isLvalue(T)(T t)
             return ce.isLvalue();
         }
 
-        return t.isLvalue();
+        return e.isLvalue();
     }
     // assume its not
     else return false;
