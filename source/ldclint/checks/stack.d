@@ -3,6 +3,7 @@ module ldclint.checks.stack;
 import ldclint.options;
 import ldclint.visitors;
 import ldclint.scopetracker;
+import ldclint.dmd.astutility;
 
 import dmd.func;
 import dmd.declaration;
@@ -71,7 +72,9 @@ extern(C++) final class StackCheckVisitor : DFSPluginVisitor
         if (type is null) type = vd.originalType;
         if (type is null) return;
 
-        if (type.size > options.maxVariableStackSize)
+        auto sz = typeSize(vd.type);
+
+        if (sz != size_t.max && sz > options.maxVariableStackSize)
         {
             warning(vd.loc, "Stack variable `%s` is big (size: %lu, limit: %lu)", vd.toChars(), type.size, options.maxVariableStackSize);
         }
