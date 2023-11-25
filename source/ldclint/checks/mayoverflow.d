@@ -53,6 +53,44 @@ extern(C++) final class MayOverflowCheckVisitor : DFSPluginVisitor
         // if they are not scalars, lets skip it
         if (!t1.isscalar || !t2.isscalar) return;
 
+        if (auto re1 = e.e1.isRealExp())
+        {
+            auto r1 = re1.toReal();
+            if (r1 <= 1.0L && r1 >= -1.0L) return;
+        }
+        else if (auto ie1 = e.e1.isIntegerExp())
+        {
+            if (t1.isunsigned)
+            {
+                ulong u1 = ie1.toUInteger();
+                if (u1 <= 1) return;
+            }
+            else
+            {
+                long i1 = ie1.toInteger();
+                if (i1 <= 1 && i1 >= -1) return;
+            }
+        }
+
+        if (auto re2 = e.e2.isRealExp())
+        {
+            auto r2 = re2.toReal();
+            if (r2 <= 1.0L && r2 >= -1.0L) return;
+        }
+        else if (auto ie2 = e.e2.isIntegerExp())
+        {
+            if (t2.isunsigned)
+            {
+                ulong u2 = ie2.toUInteger();
+                if (u2 <= 1) return;
+            }
+            else
+            {
+                long i2 = ie2.toInteger();
+                if (i2 <= 1 && i2 >= -1) return;
+            }
+        }
+
         auto s1 = t1.size();
         auto s2 = t2.size();
 
