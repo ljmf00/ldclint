@@ -26,6 +26,9 @@ struct Options
     /// whether to warn about @property usage
     bool atPropertyCheck = false;
 
+    /// whether to warn about maybe overflow operations
+    bool mayOverflowCheck = false;
+
     /// whether to warn about redundancy
     bool redundantCheck = true;
 
@@ -63,6 +66,9 @@ void tryParseOptions(out Options options)
 
             case "-Wunused":    options.unusedCheck = true;  break;
             case "-Wno-unused": options.unusedCheck = false; break;
+
+            case "-Wmayoverflow":    options.mayOverflowCheck = true;  break;
+            case "-Wno-mayoverflow": options.mayOverflowCheck = false; break;
 
             case "-Wparser":    options.parserCheck = true;  break;
             case "-Wno-parser": options.parserCheck = false; break;
