@@ -13,6 +13,7 @@ import ldclint.checks.structs_ctor_postblit;
 import ldclint.checks.atproperty;
 import ldclint.checks.redundant;
 import ldclint.checks.stack;
+import ldclint.checks.mayoverflow;
 
 import ldclint.visitors;
 
@@ -32,6 +33,7 @@ export extern(C) void runSemanticAnalysis(Module m)
     if (options.debug_)                  m.accept(new DFSPluginVisitor());
 
     if (options.unusedCheck)             m.accept(new UnusedCheckVisitor());
+    if (options.mayOverflowCheck)        m.accept(new MayOverflowCheckVisitor());
     if (options.structCtorPostblitCheck) m.accept(new StructCtorPostblitCheckVisitor());
     if (options.atPropertyCheck)         m.accept(new AtPropertyCheckVisitor());
     if (options.redundantCheck)          m.accept(new RedundantCheckVisitor());
