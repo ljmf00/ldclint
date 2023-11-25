@@ -1928,6 +1928,7 @@ extern(C++) class DFSPluginVisitor : SafeTransitiveVisitor
     }
 
     override void visit(IntegerExp) { /* skip */ }
+    override void visit(RealExp)    { /* skip */ }
     override void visit(ComplexExp) { /* skip */ }
     override void visit(ErrorExp)   { /* skip */ }
 }
