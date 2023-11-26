@@ -9,6 +9,8 @@ import dmd.dimport;
 import dmd.dsymbol;
 import dmd.func;
 import dmd.errors;
+import dmd.tokens;
+import dmd.aggregate;
 import dmd.id;
 import dmd.expression;
 import dmd.statement;
@@ -40,6 +42,51 @@ extern(C++) final class CompilerCoherenceCheckVisitor : DFSPluginVisitor
         super.visit(sym);
     }
 
+    override void visit(Expression exp)
+    {
+        // lets skip invalid expressions
+        if (!isValid(exp)) return;
+
+        if (exp.op == EXP.error)
+        {
+            warning(exp.loc, "Expression yields internally to an error");
+        }
+
+        // traverse through the AST
+        super.visit(exp);
+    }
+
+    override void visit(Declaration decl)
+    {
+        // lets skip invalid declarations
+        if (!isValid(decl)) return;
+
+        if (decl.resolvedLinkage() == LINK.default_)
+        {
+            warning(decl.loc, "Forward reference");
+        }
+
+        // traverse through the AST
+        super.visit(decl);
+    }
+
+    override void visit(AggregateDeclaration ad)
+    {
+        // lets skip invalid declarations
+        if (!isValid(ad)) return;
+
+        if (auto at = ad.aliasthis)
+        {
+            if (at.isforwardRef() || !at.sym || at.sym.isforwardRef())
+            {
+                warning(at.loc, "Alias this has a forward reference symbol");
+            }
+        }
+
+        // traverse through the AST
+        super.visit(ad);
+    }
+
     override void visit(Type t)
     {
         // lets skip invalid types
@@ -48,6 +95,16 @@ extern(C++) final class CompilerCoherenceCheckVisitor : DFSPluginVisitor
         if (t.ty == TY.Terror)
         {
             warning(Loc.initial, "Type `%s` resolves to an error type", t.toChars());
+        }
+
+        switch (t.ty)
+        {
+            case TY.Tident:
+            case TY.Ttypeof:
+            case TY.Tmixin:
+                warning(Loc.initial, "Type `%s` is a forward reference", t.toChars());
+                break;
+            default: break;
         }
 
         // this errors if the size is not known
