@@ -7,6 +7,7 @@ import ldclint.dmd.astutility;
 
 import dmd.func;
 import dmd.declaration;
+import dmd.dtemplate;
 import dmd.errors;
 import dmd.astenums;
 import dmd.mtype;
@@ -79,4 +80,7 @@ extern(C++) final class StackCheckVisitor : DFSPluginVisitor
             warning(vd.loc, "Stack variable `%s` is big (size: %lu, limit: %lu)", vd.toChars(), type.size, options.maxVariableStackSize);
         }
     }
+
+    // avoid all sorts of false positives without semantics
+    override void visit(TemplateDeclaration) { /* skip */ }
 }
