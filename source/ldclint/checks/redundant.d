@@ -6,6 +6,7 @@ import ldclint.dmd.astutility;
 import dmd.dmodule;
 import dmd.declaration;
 import dmd.dimport;
+import dmd.dtemplate;
 import dmd.dsymbol;
 import dmd.func;
 import dmd.errors;
@@ -54,9 +55,13 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
     override void visit(CmpExp e)      { visitBinExp(e); }
     override void visit(AssignExp e)   { visitBinExp(e); }
     override void visit(LogicalExp e)  { visitBinExp(e); }
+    override void visit(AndExp e)      { visitBinExp(e); }
+    override void visit(OrExp e)       { visitBinExp(e); }
 
     private void visitBinExp(E)(E e)
     {
+        super.visit(e);
+
         // lets skip invalid assignments
         if (!isValid(e)) return;
 
@@ -65,13 +70,17 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
 
         if (isIdenticalASTNodes(e.e1, e.e2))
         {
+            // skip expressions known at compile-time
+            if (isCompileTimeExp(e.e1) || isCompileTimeExp(e.e2)) return;
+
             // skip rvalues from this check
             if (!isLvalue(e.e1)) return;
             if (!isLvalue(e.e2)) return;
 
             warning(e.loc, "Redundant expression `%s`", e.toChars());
         }
-
-        super.visit(e);
     }
+
+    // avoid all sorts of false positives without semantics
+    override void visit(TemplateDeclaration) { /* skip */ }
 }

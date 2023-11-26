@@ -3,6 +3,7 @@ module ldclint.dmd.astutility;
 import dmd.expression;
 import dmd.mtype;
 import dmd.astenums;
+import dmd.tokens;
 import dmd.target;
 
 bool isIdenticalASTNodes(T, U)(T lhs, U rhs)
@@ -141,4 +142,30 @@ size_t typeSize(T)(T t)
 
     }
     else return size_t.max;
+}
+
+bool isCompileTimeExp(Expression e)
+{
+    switch (e.op)
+    {
+        case EXP.string_:
+        case EXP.int64:
+        case EXP.float64:
+        case EXP.complex80:
+        case EXP.null_:
+        case EXP.arrayLiteral:
+        case EXP.assocArrayLiteral:
+        case EXP.structLiteral:
+        case EXP.prettyFunction:
+        case EXP.line:
+        case EXP.file:
+        case EXP.fileFullPath:
+        case EXP.moduleString:
+        case EXP.functionString:
+        case EXP.function_:
+        case EXP.typeid_:
+            return true;
+        default:
+            return false;
+    }
 }
