@@ -98,7 +98,7 @@ extern(C++) final class MayOverflowCheckVisitor : DFSPluginVisitor
 
         if (s1 < castSize && s2 < castSize)
         {
-            warning(e.loc, "Expression `%s` may overflow before cast", e.toChars());
+            warning(e.loc, "Expression `%s` may overflow before conversion", e.toChars());
         }
     }
 }
