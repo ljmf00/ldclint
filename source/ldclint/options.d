@@ -38,6 +38,9 @@ struct Options
     /// whether to warn about stack polution (huge variables, ...)
     bool stackCheck = true;
 
+    /// whether to warn about forward references being present
+    bool forwardRefCheck = true;
+
     /// max variable stack size;
     size_t maxVariableStackSize = 256;
 
@@ -90,6 +93,9 @@ void tryParseOptions(out Options options)
 
             case "-Wstack":        options.stackCheck = true;  break;
             case "-Wno-stack":     options.stackCheck = false; break;
+
+            case "-Wforwardref":    options.forwardRefCheck = true; break;
+            case "-Wno-forwardref": options.forwardRefCheck = false; break;
 
             case "--max-var-stack-size":
                 auto argName = args.front;
