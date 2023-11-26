@@ -29,6 +29,9 @@ struct Options
     /// whether to warn about maybe overflow operations
     bool mayOverflowCheck = false;
 
+    /// whether to warn about boolean bitwise operations
+    bool boolBitwiseCheck = true;
+
     /// whether to warn about redundancy
     bool redundantCheck = true;
 
@@ -69,6 +72,9 @@ void tryParseOptions(out Options options)
 
             case "-Wmayoverflow":    options.mayOverflowCheck = true;  break;
             case "-Wno-mayoverflow": options.mayOverflowCheck = false; break;
+
+            case "-Wboolbitwise":    options.boolBitwiseCheck = true;  break;
+            case "-Wno-boolbitwise": options.boolBitwiseCheck = false; break;
 
             case "-Wparser":    options.parserCheck = true;  break;
             case "-Wno-parser": options.parserCheck = false; break;
