@@ -38,6 +38,20 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
             warning(sym.loc, "This symbol can't be resolved because it's a forward reference");
         }
 
+        if (auto decl = sym.isDeclaration())
+        {
+            if (decl.resolvedLinkage() == LINK.default_)
+            {
+                warning(decl.loc, "Forward reference on resolving linkage");
+            }
+
+            if (auto vd = decl.isVarDeclaration())
+            {
+                // this errors if not known
+                cast(void)vd.isDataseg();
+            }
+        }
+
         // traverse through the AST
         super.visit(sym);
     }
@@ -61,11 +75,6 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
         // lets skip invalid declarations
         if (!isValid(decl)) return;
 
-        if (decl.resolvedLinkage() == LINK.default_)
-        {
-            warning(decl.loc, "Forward reference");
-        }
-
         // traverse through the AST
         super.visit(decl);
     }
@@ -77,7 +86,7 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
 
         if (auto at = ad.aliasthis)
         {
-            if (at.isforwardRef() || !at.sym || at.sym.isforwardRef())
+            if (at.isforwardRef() || (at.sym && at.sym.isforwardRef()))
             {
                 warning(at.loc, "Alias this has a forward reference symbol");
             }
@@ -92,10 +101,8 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
         // lets skip invalid types
         if (!isValid(t)) return;
 
-        if (t.ty == TY.Terror)
-        {
-            warning(Loc.initial, "Type `%s` resolves to an error type", t.toChars());
-        }
+        // look for type bugs internally
+        t.check();
 
         switch (t.ty)
         {
@@ -104,11 +111,36 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
             case TY.Tmixin:
                 warning(Loc.initial, "Type `%s` is a forward reference", t.toChars());
                 break;
-            default: break;
-        }
 
-        // this errors if the size is not known
-        cast(void)t.size();
+            case TY.Tstruct:
+                auto ts = t.isTypeStruct();
+                if (!ts)
+                {
+                    error(Loc.initial, "Type `%s` is not coherent with it's type class", t.toChars());
+                }
+
+                // FIXME: the compiler seem to give wrong information about alias this forward references here
+
+                /*
+                if (ts.att == AliasThisRec.fwdref)
+                {
+                    warning(Loc.initial, "Type struct `%s` has an alias this with a forward reference", t.toChars());
+                }
+                */
+
+                if (ts.sym && ts.sym.members)
+                    goto default;
+
+                break;
+
+            case TY.Terror:
+                error(Loc.initial, "Type `%s` resolves to an error type", t.toChars());
+                break;
+            default:
+                // this errors if the size is not known
+                cast(void)t.size();
+                break;
+        }
 
         // traverse through the AST
         super.visit(t);
@@ -119,7 +151,7 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
         }
         else
         {
-            warning(Loc.initial, "Type `%s` can't be resolved to the base type", t.toChars());
+            error(Loc.initial, "Type `%s` can't be resolved to the base type", t.toChars());
         }
     }
 
