@@ -1,4 +1,4 @@
-module ldclint.checks.atproperty;
+module ldclint.checks.coherence;
 
 import ldclint.visitors;
 import ldclint.dmd.location;
@@ -24,7 +24,7 @@ import std.array;
 import std.range;
 import std.bitmanip;
 
-extern(C++) final class CompilerCoherenceCheckVisitor : DFSPluginVisitor
+extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
 {
     alias visit = DFSPluginVisitor.visit;
 
@@ -115,7 +115,7 @@ extern(C++) final class CompilerCoherenceCheckVisitor : DFSPluginVisitor
 
         if (auto bt = t.toBasetype())
         {
-            visit(bt);
+            if (bt !is t) visit(bt);
         }
         else
         {

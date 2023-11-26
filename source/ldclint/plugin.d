@@ -15,6 +15,7 @@ import ldclint.checks.redundant;
 import ldclint.checks.stack;
 import ldclint.checks.mayoverflow;
 import ldclint.checks.boolbitwise;
+import ldclint.checks.coherence;
 
 import ldclint.visitors;
 
@@ -37,6 +38,7 @@ export extern(C) void runSemanticAnalysis(Module m)
     if (options.mayOverflowCheck)        m.accept(new MayOverflowCheckVisitor());
     if (options.structCtorPostblitCheck) m.accept(new StructCtorPostblitCheckVisitor());
     if (options.boolBitwiseCheck)        m.accept(new BoolBitwiseCheckVisitor());
+    if (options.coherenceCheck)          m.accept(new CoherenceCheckVisitor());
     if (options.atPropertyCheck)         m.accept(new AtPropertyCheckVisitor());
     if (options.redundantCheck)          m.accept(new RedundantCheckVisitor());
     if (options.stackCheck)              m.accept(new StackCheckVisitor(&options));
