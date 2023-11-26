@@ -1,4 +1,4 @@
-module ldclint.checks.structs_ctor_postblit;
+module ldclint.checks.structs_dtor_postblit;
 
 import ldclint.visitors;
 
@@ -17,7 +17,7 @@ import dmd.dstruct;
 import std.stdio;
 import std.string;
 
-extern(C++) final class StructCtorPostblitCheckVisitor : DFSPluginVisitor
+extern(C++) final class StructDtorPostblitCheckVisitor : DFSPluginVisitor
 {
     alias visit = DFSPluginVisitor.visit;
 

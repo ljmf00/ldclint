@@ -17,8 +17,8 @@ struct Options
     /// whether to run unused check
     bool unusedCheck = true;
 
-    /// whether to run the struct ctor/postblit check
-    bool structCtorPostblitCheck = true;
+    /// whether to run the struct dtor/postblit check
+    bool structDtorPostblitCheck = true;
 
     /// whether to run parser checks
     bool parserCheck = true;
@@ -82,8 +82,8 @@ void tryParseOptions(out Options options)
             case "-Wparser":    options.parserCheck = true;  break;
             case "-Wno-parser": options.parserCheck = false; break;
 
-            case "-Wstruct-ctorpostblit":    options.structCtorPostblitCheck = true;  break;
-            case "-Wno-struct-ctorpostblit": options.structCtorPostblitCheck = false; break;
+            case "-Wstruct-dtorpostblit":    options.structDtorPostblitCheck = true;  break;
+            case "-Wno-struct-dtorpostblit": options.structDtorPostblitCheck = false; break;
 
             case "-Watproperty":    options.atPropertyCheck = true;  break;
             case "-wno-atproperty": options.atPropertyCheck = false; break;
