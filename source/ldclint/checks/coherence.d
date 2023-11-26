@@ -40,9 +40,12 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
 
         if (auto decl = sym.isDeclaration())
         {
-            if (decl.resolvedLinkage() == LINK.default_)
+            if (auto fd = decl.isFuncDeclaration())
             {
-                warning(decl.loc, "Forward reference on resolving linkage");
+                if (fd.resolvedLinkage() == LINK.default_)
+                {
+                    warning(fd.loc, "Forward reference on resolving linkage");
+                }
             }
 
             if (auto vd = decl.isVarDeclaration())
