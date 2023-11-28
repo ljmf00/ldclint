@@ -28,3 +28,21 @@ struct Foo5
 
     private int a;
 }
+
+struct Foo6
+{
+    this(this) {}
+    ~this() {}
+}
+
+struct Foo7
+{
+    this(this) {}
+    ~this() {}
+}
+
+struct Foo8
+{
+    Foo6 foo6;
+    Foo7 foo7;
+}
