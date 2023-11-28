@@ -4,6 +4,8 @@ import std.exception;
 import std.process;
 import std.array;
 import std.string;
+import std.algorithm;
+import std.typecons;
 import std.conv : to;
 
 class InvalidOptionsException : Exception
@@ -46,6 +48,9 @@ struct Options
 
     /// debug plugin (dummy AST traversal, ...)
     bool debug_ = false;
+
+    /// exclude matchers
+    string[] excludes;
 }
 
 void setAll(ref Options options, bool value)
@@ -59,11 +64,76 @@ void setAll(ref Options options, bool value)
 
 void tryParseOptions(out Options options)
 {
-    auto args = environment.get("LDCLINT_FLAGS", null).split();
+    auto args = environment.get("LDCLINT_FLAGS", null).splitter();
 
-    while(args.length)
+    string popFrontArg()
     {
-        switch(args.front)
+        bool onquotes;
+        bool escape;
+        Appender!string arg;
+
+        while(!args.empty)
+        {
+            auto cur = args.front;
+            args.popFront();
+
+            if (escape)
+            {
+                arg ~= ' ';
+                escape = false;
+            }
+
+            while (!cur.empty)
+            {
+                auto c = cur.front;
+                cur.popFront();
+
+                if (escape)
+                {
+                    arg ~= c;
+                    escape = false;
+                    continue;
+                }
+
+                switch(c)
+                {
+                    case '\\':
+                        escape = true;
+                        continue;
+                    case '"':
+                        onquotes = !onquotes;
+                        break;
+                    default:
+                        arg ~= c;
+                        break;
+                }
+            }
+
+            if (!onquotes)
+                break;
+        }
+
+        if (escape)
+            throw new InvalidOptionsException("unterminated escape");
+
+        if (onquotes)
+            throw new InvalidOptionsException("unterminated doublequotes");
+
+        return arg[];
+    }
+
+    while(!args.empty)
+    {
+        auto arg = popFrontArg();
+
+        string getArgParam()
+        {
+            if (args.empty)
+                throw new InvalidOptionsException("expected an argument parameter for: " ~ arg);
+            return popFrontArg();
+        }
+
+        switch(arg)
         {
             case "--debug": options.debug_ = true;  break;
 
@@ -97,19 +167,18 @@ void tryParseOptions(out Options options)
             case "-Wcoherence":    options.coherenceCheck = true; break;
             case "-Wno-coherence": options.coherenceCheck = false; break;
 
+            case "--exclude":
+                auto argParam = getArgParam();
+                options.excludes ~= argParam;
+                break;
+
             case "--max-var-stack-size":
-                auto argName = args.front;
-                args.popFront();
-
-                if (args.empty) throw new InvalidOptionsException("expected a number argument for " ~ argName);
-
-                options.maxVariableStackSize = args.front.to!size_t;
+                auto argParam = getArgParam();
+                options.maxVariableStackSize = argParam.to!size_t;
                 break;
 
             default:
-                throw new InvalidOptionsException(args.front);
+                throw new InvalidOptionsException("unknown argument: " ~ arg);
         }
-
-        args.popFront();
     }
 }

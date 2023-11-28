@@ -1,5 +1,7 @@
 module ldclint.plugin;
 
+import std.regex;
+
 import ldclint.options;
 import ldclint.dparseast;
 
@@ -31,7 +33,14 @@ export extern(C) void runSemanticAnalysis(Module m)
 {
     if (!m) return;
 
-    if (options.parserCheck)             dparseModule(options, m);
+    auto filename = cast(immutable)m.srcfile.toString();
+    foreach (e; options.excludes)
+    {
+        // skip excluded files
+        if (filename.matchFirst(e)) return;
+    }
+
+    if (options.parserCheck)             dparseModule(options, m, filename);
     if (options.debug_)                  m.accept(new DFSPluginVisitor());
 
     if (options.unusedCheck)             m.accept(new UnusedCheckVisitor());

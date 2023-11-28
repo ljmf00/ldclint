@@ -17,7 +17,7 @@ import std.string : toStringz;
 
 private __gshared Module[void*] dparseMap;
 
-Module dparseModule(ref Options options, dmd.dmodule.Module mod)
+Module dparseModule(ref Options options, dmd.dmodule.Module mod, string filename)
 {
     if (!mod) return null;
 
@@ -35,7 +35,7 @@ Module dparseModule(ref Options options, dmd.dmodule.Module mod)
     RollbackAllocator rba;
     StringCache cache = StringCache(StringCache.defaultBucketCount);
     LexerConfig config = {
-        fileName       : cast(immutable)mod.srcfile.toString(),
+        fileName       : filename,
         stringBehavior : StringBehavior.source,
     };
 
