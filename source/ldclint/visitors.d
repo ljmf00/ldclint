@@ -26,7 +26,10 @@ import dmd.nspace;
 import dmd.init;
 import dmd.cond;
 
-import dmd.root.rootobject;
+static if (__VERSION__ >= 2108)
+    import dmd.rootobject;
+else
+    import dmd.root.rootobject;
 import dmd.root.array;
 
 import std.stdio;
