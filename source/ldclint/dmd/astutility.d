@@ -79,7 +79,7 @@ size_t typeSize(T)(T t)
                 return size_t.max;
 
             case Tarray:
-                return target.ptrsize + (target.is64bit ? 8 : 4);
+                return target.ptrsize + (target.isLP64 ? 8 : 4);
 
             case TY.Taarray:
             case TY.Tpointer:
