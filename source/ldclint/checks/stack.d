@@ -73,7 +73,11 @@ extern(C++) final class StackCheckVisitor : DFSPluginVisitor
         if (type is null) type = vd.originalType;
         if (type is null) return;
 
-        auto sz = typeSize(vd.type);
+        auto rsz = querier(vd.type).size;
+        // unresolved size
+        if (!rsz.resolved) return;
+
+        auto sz = rsz.get;
 
         if (sz != size_t.max && sz > options.maxVariableStackSize)
         {

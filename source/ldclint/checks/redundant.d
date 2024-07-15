@@ -62,20 +62,20 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
     {
         super.visit(e);
 
-        // lets skip invalid assignments
+        // lets skip invalid expressions
         if (!isValid(e)) return;
 
-        // don't warn about null expressions
-        if (!e.e1 || !e.e2) return;
+        // skip unresolved expressions
+        if (!querier(e).isResolved) return;
 
-        if (isIdenticalASTNodes(e.e1, e.e2))
+        if (querier(e.e1).isIdentical(e.e2))
         {
             // skip expressions known at compile-time
-            if (isCompileTimeExp(e.e1) || isCompileTimeExp(e.e2)) return;
+            if (querier(e.e1).hasCTKnownValue.get || querier(e.e2).hasCTKnownValue.get) return;
 
             // skip rvalues from this check
-            if (!isLvalue(e.e1)) return;
-            if (!isLvalue(e.e2)) return;
+            if (!querier(e.e1).isLvalue.get) return;
+            if (!querier(e.e2).isLvalue.get) return;
 
             warning(e.loc, "Redundant expression `%s`", e.toChars());
         }
