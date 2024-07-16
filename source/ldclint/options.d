@@ -43,6 +43,9 @@ struct Options
     /// whether to warn about forward references being present
     bool coherenceCheck = true;
 
+    /// whether to warn about suspicious dereferences
+    bool suspiciousDerefCheck = true;
+
     /// max variable stack size;
     size_t maxVariableStackSize = 256;
 
@@ -166,6 +169,9 @@ void tryParseOptions(out Options options)
 
             case "-Wcoherence":    options.coherenceCheck = true; break;
             case "-Wno-coherence": options.coherenceCheck = false; break;
+
+            case "-Wsusderef":    options.suspiciousDerefCheck = true; break;
+            case "-Wno-susderef": options.suspiciousDerefCheck = false; break;
 
             case "--exclude":
                 auto argParam = getArgParam();

@@ -1,4 +1,4 @@
-// RUN: ldc2 -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck --implicit-check-not=Warning %s
+// RUN: env LDCLINT_FLAGS="-Wsusderef" ldc2 -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck --implicit-check-not=Warning %s
 
 // CHECK-DAG: struct.d(4): Warning: user defined copy construction defined but no destructor
 struct Foo1
@@ -26,4 +26,18 @@ struct Foo4
 {
     // CHECK-DAG: struct.d(28): Warning: Variable `a` appears to be unused
     private int a;
+}
+
+struct Foo5
+{
+    int[] a;
+
+    int opIndex(size_t i) { return a[i]; }
+}
+
+auto foo()
+{
+    Foo5* foo5 = new Foo5;
+    // CHECK-DAG: struct.d(42): Warning: Suspicious pointer indexing, use `pragma(noqa)` to ignore it.
+    return foo5[5];
 }
