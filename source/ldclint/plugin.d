@@ -18,6 +18,7 @@ import ldclint.checks.stack;
 import ldclint.checks.mayoverflow;
 import ldclint.checks.boolbitwise;
 import ldclint.checks.coherence;
+import ldclint.checks.susderef;
 
 import ldclint.visitors;
 
@@ -50,5 +51,6 @@ export extern(C) void runSemanticAnalysis(Module m)
     if (options.coherenceCheck)          m.accept(new CoherenceCheckVisitor());
     if (options.atPropertyCheck)         m.accept(new AtPropertyCheckVisitor());
     if (options.redundantCheck)          m.accept(new RedundantCheckVisitor());
+    if (options.suspiciousDerefCheck)    m.accept(new SuspiciousDerefCheckVisitor());
     if (options.stackCheck)              m.accept(new StackCheckVisitor(&options));
 }
