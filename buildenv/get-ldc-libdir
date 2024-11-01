@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+LDC=$1
+TEMPDIR=$(mktemp -d ldclint.XXXXX)
+trap "rm -rf $TEMPDIR" EXIT
+
+touch $TEMPDIR/empty.d
+
+$LDC -main -v -of=$TEMPDIR/empty $TEMPDIR/empty.d | tail -1 | sed 's#.*-L *\([^ ]*\).*#\1#'

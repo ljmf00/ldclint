@@ -7,6 +7,7 @@ run_command('buildenv/fetch-ldc-source', check: true)
 cc = meson.get_compiler('c')
 dcompiler = meson.get_compiler('d')
 
+ldc_libdir = run_command('buildenv/get-ldc-libdir', ' '.join(dcompiler.cmd_array()), check: true).stdout().strip()
 ldclint_incdir = include_directories('source')
 
 add_global_arguments('-J' + meson.current_build_dir() + '/ldc-src/dmd/res', language: 'd')
@@ -79,7 +80,7 @@ ldclint_core_dep = declare_dependency(
   dependencies: [ dparse_dep ],
 )
 
-phobos2_ldc_dep = cc.find_library('phobos2-ldc', static: true)
+phobos2_ldc_dep = cc.find_library('phobos2-ldc', dirs: [ldc_libdir], static: true)
 
 ldclint_lib = shared_library('ldclint-' + dcompiler.version(),
   [
