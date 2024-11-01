@@ -1,4 +1,4 @@
-// RUN: ldc2 -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck --implicit-check-not=Warning %s
+// RUN: ldc2 -wi -c %s -o- --plugin=%PLUGIN% 2>&1 | FileCheck --implicit-check-not=Warning %s
 
 // CHECK-DAG: struct.d(4): Warning: user defined copy construction defined but no destructor
 struct Foo1
