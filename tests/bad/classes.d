@@ -1,4 +1,4 @@
-// RUN: ldc2 -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck %s
+// RUN: ldc2 -wi -c %s -o- --plugin=%PLUGIN% 2>&1 | FileCheck %s
 
 class Foo
 {
