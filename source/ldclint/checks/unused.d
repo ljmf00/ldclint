@@ -15,7 +15,6 @@ import dmd.statement;
 import dmd.mtype;
 import dmd.astenums;
 
-import std.stdio;
 import std.string;
 import std.array;
 import std.range;

@@ -6,7 +6,6 @@ import dparse.rollback_allocator : RollbackAllocator;
 import dparse.parser;
 import dparse.lexer;
 import dparse.ast;
-import dparse.formatter;
 
 import ldclint.dmd.location;
 import dmd.errors;

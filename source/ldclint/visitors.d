@@ -32,11 +32,6 @@ else
     import dmd.root.rootobject;
 import dmd.root.array;
 
-import std.stdio;
-import std.string;
-import std.range;
-import std.array;
-
 // compatibility with old compiler
 static if (!is(MixinStatement) || !is(MixinDeclaration))
 {
@@ -47,6 +42,11 @@ static if (!is(MixinStatement) || !is(MixinDeclaration))
 }
 
 // debug = ast;
+debug (ast) {
+    import std.string;
+    import std.range;
+    import std.stdio;
+}
 
 extern (C++) class SafeTransitiveVisitor : SemanticTimePermissiveVisitor
 {
