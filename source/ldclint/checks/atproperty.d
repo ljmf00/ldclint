@@ -14,12 +14,6 @@ import dmd.statement;
 import dmd.mtype;
 import dmd.astenums;
 
-import std.stdio;
-import std.string;
-import std.array;
-import std.range;
-import std.bitmanip;
-
 extern(C++) final class AtPropertyCheckVisitor : DFSPluginVisitor
 {
     alias visit = DFSPluginVisitor.visit;

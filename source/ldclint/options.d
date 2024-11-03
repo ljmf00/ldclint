@@ -3,7 +3,6 @@ module ldclint.options;
 import std.exception;
 import std.process;
 import std.array;
-import std.string;
 import std.algorithm;
 import std.typecons;
 import std.conv : to;
@@ -18,6 +17,9 @@ struct Options
 {
     /// whether to run unused check
     bool unusedCheck = true;
+
+    /// whether to run unused-imports check
+    bool unusedImportsCheck = false;
 
     /// whether to run the struct dtor/postblit check
     bool structDtorPostblitCheck = true;
@@ -142,6 +144,9 @@ void tryParseOptions(out Options options)
 
             case "-Wunused":    options.unusedCheck = true;  break;
             case "-Wno-unused": options.unusedCheck = false; break;
+
+            case "-Wunused-imports":    options.unusedImportsCheck = true;  break;
+            case "-Wno-unused-imports": options.unusedImportsCheck = false; break;
 
             case "-Wmayoverflow":    options.mayOverflowCheck = true;  break;
             case "-Wno-mayoverflow": options.mayOverflowCheck = false; break;

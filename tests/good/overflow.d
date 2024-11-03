@@ -1,4 +1,4 @@
-// RUN: env LDCLINT_FLAGS="-Wmayoverflow" ldc2 -w -c %s -o- --plugin=libldclint.so
+// RUN: env LDCLINT_FLAGS="-Wmayoverflow" ldc2 -w -c %s -o- --plugin=%PLUGIN%
 
 ulong mul(uint lhs, uint rhs)
 {

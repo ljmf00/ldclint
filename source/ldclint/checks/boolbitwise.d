@@ -1,7 +1,6 @@
 module ldclint.checks.boolbitwise;
 
 import ldclint.visitors;
-import ldclint.dmd.astutility;
 
 import dmd.dmodule;
 import dmd.declaration;
@@ -14,12 +13,6 @@ import dmd.expression;
 import dmd.statement;
 import dmd.mtype;
 import dmd.astenums;
-
-import std.stdio;
-import std.string;
-import std.array;
-import std.range;
-import std.bitmanip;
 
 extern(C++) final class BoolBitwiseCheckVisitor : DFSPluginVisitor
 {

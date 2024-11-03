@@ -15,7 +15,6 @@ import dmd.statement;
 import dmd.dstruct;
 
 import std.stdio;
-import std.string;
 
 extern(C++) final class StructDtorPostblitCheckVisitor : DFSPluginVisitor
 {

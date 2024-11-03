@@ -1,4 +1,4 @@
-// RUN: ldc2 -w -c %s -o- --plugin=libldclint.so
+// RUN: ldc2 -w -c %s -o- --plugin=%PLUGIN%
 
 struct Foo1 {}
 struct Foo2 { @disable this(this); }

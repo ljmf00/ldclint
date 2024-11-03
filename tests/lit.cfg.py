@@ -17,3 +17,4 @@ config.test_format = lit.formats.ShTest(execute_external=False)
 
 
 config.substitutions.append(("%PATH%", config.environment["PATH"]))
+config.substitutions.append(("%PLUGIN%", os.environ["LDCLINT_SO"]))

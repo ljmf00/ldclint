@@ -18,12 +18,6 @@ import dmd.mtype;
 import dmd.astenums;
 import dmd.dtemplate;
 
-import std.stdio;
-import std.string;
-import std.array;
-import std.range;
-import std.bitmanip;
-
 extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
 {
     alias visit = DFSPluginVisitor.visit;

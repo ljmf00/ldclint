@@ -11,7 +11,15 @@ done
 TESTS_FOLDER="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 unset SOURCE
 
-
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(readlink -f "${1-.}")"
-
+if [ "$(uname)"  != "Darwin" ]; then
+  SOEXT= ".so"
+else
+  SOEXT=".dylib"
+fi
+PLUGIN=$(find $(pwd) -name "libldclint*$SOEXT" | head -1)
+if [ "x$PLUGIN" == "x" ]; then
+  echo Failing to locate the ldclint plugin >/dev/stderr
+  exit 1;
+fi
+export LDCLINT_SO=$PLUGIN
 lit "$TESTS_FOLDER" -v
