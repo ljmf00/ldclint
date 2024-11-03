@@ -45,15 +45,22 @@ extern(C++) final class UnusedImportsCheckVisitor : DFSPluginVisitor
     }
 
     /// visit context
-    Context context;
+    Context[void*] ctx;
     /// scope tracker
     ScopeTracker scopeTracker;
 
+    Module* currentModule = null;
+
+    ref Context context() {
+        return ctx.require(cast(void*)currentModule);
+    }
     override void visit(Module m)
     {
         // lets skip invalid modules
         if (!isValid(m)) return;
 
+        auto prevModule = this.currentModule;
+        this.currentModule = &m;
         auto sc = scopeTracker.track(m);
         scope(exit) scopeTracker.untrack(m, sc);
 
@@ -83,6 +90,7 @@ extern(C++) final class UnusedImportsCheckVisitor : DFSPluginVisitor
             buf.writeByte(0);
             warning(mod.loc, "Imported module `%s` appears to be unused", buf.extractData);
         }
+        this.currentModule = prevModule;
     }
 
     override void visit(CallExp e)
