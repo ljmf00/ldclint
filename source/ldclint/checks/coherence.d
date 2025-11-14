@@ -1,6 +1,7 @@
 module ldclint.checks.coherence;
 
 import ldclint.visitors;
+import ldclint.dmd.astutility;
 import ldclint.dmd.location;
 
 import dmd.dmodule;
@@ -64,10 +65,12 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
         // lets skip invalid expressions
         if (!isValid(exp)) return;
 
-        if (exp.op == EXP.error)
-        {
-            warning(exp.loc, "Expression yields internally to an error");
-        }
+        auto qexp = querier(exp);
+
+        string error;
+
+        if (!qexp.isResolved(error))
+            .error(exp.loc, "%.*s", cast(int)error.length, error.ptr);
 
         // traverse through the AST
         super.visit(exp);
@@ -77,6 +80,13 @@ extern(C++) final class CoherenceCheckVisitor : DFSPluginVisitor
     {
         // lets skip invalid declarations
         if (!isValid(decl)) return;
+
+        auto qdecl = querier(decl);
+
+        string error;
+
+        if (!qdecl.isResolved(error))
+            .error(decl.loc, "%.*s", cast(int)error.length, error.ptr);
 
         // traverse through the AST
         super.visit(decl);

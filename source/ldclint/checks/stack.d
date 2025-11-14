@@ -1,33 +1,15 @@
 module ldclint.checks.stack;
 
-import ldclint.options;
-import ldclint.visitors;
-import ldclint.scopetracker;
-import ldclint.dmd.astutility;
+enum Metadata = imported!"ldclint.checks".Metadata(
+    "stack",
+    No.byDefault,
+);
 
-import dmd.func;
-import dmd.declaration;
-import dmd.dtemplate;
-import dmd.errors;
-import dmd.astenums;
-import dmd.mtype;
-
-extern(C++) final class StackCheckVisitor : DFSPluginVisitor
+final class Check : imported!"ldclint.checks".Check!Metadata
 {
-    alias visit = DFSPluginVisitor.visit;
+    DMD.ScopeTracker scopeTracker;
 
-    this(Options* options)
-    {
-        this.options = options;
-    }
-
-    // linter options
-    Options* options;
-
-    /// scope tracker
-    ScopeTracker scopeTracker;
-
-    override void visit(FuncDeclaration fd)
+    override void visit(DMD.FuncDeclaration fd)
     {
         // lets skip invalid functions
         if (!isValid(fd)) return;
@@ -39,7 +21,7 @@ extern(C++) final class StackCheckVisitor : DFSPluginVisitor
         super.visit(fd);
     }
 
-    override void visit(VarDeclaration vd)
+    override void visit(DMD.VarDeclaration vd)
     {
         // lets skip invalid variable declarations
         if (!isValid(vd)) return;
@@ -86,5 +68,5 @@ extern(C++) final class StackCheckVisitor : DFSPluginVisitor
     }
 
     // avoid all sorts of false positives without semantics
-    override void visit(TemplateDeclaration) { /* skip */ }
+    override void visit(DMD.TemplateDeclaration) { /* skip */ }
 }

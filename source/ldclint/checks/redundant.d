@@ -1,20 +1,9 @@
 module ldclint.checks.redundant;
 
-import ldclint.visitors;
-import ldclint.dmd.astutility;
+import ldclint.utils.querier : Querier, querier;
+import ldclint.utils.report;
 
-import dmd.dmodule;
-import dmd.declaration;
-import dmd.dimport;
-import dmd.dtemplate;
-import dmd.dsymbol;
-import dmd.func;
-import dmd.errors;
-import dmd.id;
-import dmd.expression;
-import dmd.statement;
-import dmd.mtype;
-import dmd.astenums;
+import DMD = ldclint.dmd;
 
 import std.stdio;
 import std.string;
@@ -22,51 +11,56 @@ import std.array;
 import std.range;
 import std.bitmanip;
 
-extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
-{
-    alias visit = DFSPluginVisitor.visit;
+enum Metadata = imported!"ldclint.checks".Metadata(
+    "redundant",
+    Yes.byDefault,
+);
 
-    override void visit(VarDeclaration vd)
+final class Check : imported!"ldclint.checks".GenericCheck!Metadata
+{
+    alias visit = imported!"ldclint.checks".GenericCheck!Metadata.visit;
+
+    override void visit(Querier!(DMD.VarDeclaration) vd)
     {
         // lets skip invalid variable declarations
-        if (!isValid(vd)) return;
+        if (!vd.isValid()) return;
 
-        if (vd.storage_class & STC.static_ && vd.storage_class & STC.gshared)
+        if (vd.storage_class & DMD.STC.static_ && vd.storage_class & DMD.STC.gshared)
             warning(vd.loc, "Redundant attribute `static` and `__gshared`");
 
         // traverse through the AST
         super.visit(vd);
     }
 
-    override void visit(FuncDeclaration fd)
+    override void visit(Querier!(DMD.FuncDeclaration) fd)
     {
         // lets skip invalid function declarations
-        if (!isValid(fd)) return;
+        if (!fd.isValid()) return;
 
-        if (fd.storage_class & STC.final_ && fd.visibility.kind == Visibility.Kind.private_)
+        if (fd.storage_class & DMD.STC.final_ && fd.visibility.kind == DMD.Visibility.Kind.private_)
             warning(fd.loc, "Redundant attribute `final` with `private` visibility");
 
         // traverse through the AST
         super.visit(fd);
     }
 
-    override void visit(IdentityExp e) { visitBinExp(e); }
-    override void visit(EqualExp e)    { visitBinExp(e); }
-    override void visit(CmpExp e)      { visitBinExp(e); }
-    override void visit(AssignExp e)   { visitBinExp(e); }
-    override void visit(LogicalExp e)  { visitBinExp(e); }
-    override void visit(AndExp e)      { visitBinExp(e); }
-    override void visit(OrExp e)       { visitBinExp(e); }
+    override void visit(Querier!(DMD.IdentityExp) e) { visitBinExp(e); }
+    override void visit(Querier!(DMD.EqualExp) e)    { visitBinExp(e); }
+    override void visit(Querier!(DMD.CmpExp) e)      { visitBinExp(e); }
+    override void visit(Querier!(DMD.AssignExp) e)   { visitBinExp(e); }
+    override void visit(Querier!(DMD.LogicalExp) e)  { visitBinExp(e); }
+    override void visit(Querier!(DMD.AndExp) e)      { visitBinExp(e); }
+    override void visit(Querier!(DMD.OrExp) e)       { visitBinExp(e); }
 
     private void visitBinExp(E)(E e)
     {
         super.visit(e);
 
         // lets skip invalid expressions
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
         // skip unresolved expressions
-        if (!querier(e).isResolved) return;
+        if (!e.isResolved) return;
 
         if (querier(e.e1).isIdentical(e.e2))
         {
@@ -82,5 +76,5 @@ extern(C++) final class RedundantCheckVisitor : DFSPluginVisitor
     }
 
     // avoid all sorts of false positives without semantics
-    override void visit(TemplateDeclaration) { /* skip */ }
+    override void visit(Querier!(DMD.TemplateDeclaration) /* td */) { /* skip */ }
 }

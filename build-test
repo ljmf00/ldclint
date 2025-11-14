@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+./build && ./tests/run builddir/installdir/lib/$(uname -m)-linux-gnu/

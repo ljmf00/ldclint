@@ -1,4 +1,4 @@
-module ldclint.scopetracker;
+module ldclint.dmd.scopetracker;
 
 import dmd.dscope;
 import dmd.dsymbol;

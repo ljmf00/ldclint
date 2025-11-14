@@ -1,4 +1,4 @@
-// RUN: env LDCLINT_FLAGS="-Watproperty" ldc2 -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck %s
+// RUN: env LDCLINT_FLAGS="-Watproperty -Wunused" ldc2 -wi -c %s -o- --plugin=libldclint.so 2>&1 | FileCheck %s
 
 // CHECK-DAG: func.d(6): Warning: Function `foo` appears to be unused
 // CHECK-DAG: func.d(6): Warning: Variable `p1` appears to be unused

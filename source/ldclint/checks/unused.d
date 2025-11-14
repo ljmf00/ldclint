@@ -1,43 +1,39 @@
 module ldclint.checks.unused;
 
-import ldclint.visitors;
-import ldclint.scopetracker;
+import ldclint.utils.querier : Querier, querier;
+import ldclint.utils.report;
 
-import dmd.dmodule;
-import dmd.declaration;
-import dmd.dimport;
-import dmd.dsymbol;
-import dmd.func;
-import dmd.errors;
-import dmd.id;
-import dmd.expression;
-import dmd.statement;
-import dmd.mtype;
-import dmd.astenums;
+import DMD = ldclint.dmd;
 
-import std.stdio;
-import std.string;
-import std.array;
-import std.range;
+import std.typecons;
 import std.bitmanip;
 
-extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
+enum Metadata = imported!"ldclint.checks".Metadata(
+    "unused",
+    No.byDefault,
+    Yes.allModules,
+    100 /* priority */,
+);
+
+final class Check : imported!"ldclint.checks".GenericCheck!Metadata
 {
-    alias visit = DFSPluginVisitor.visit;
+    alias visit = imported!"ldclint.checks".GenericCheck!Metadata.visit;
 
     static struct Context
     {
         /// number of references of a symbol
         size_t[void*] refs;
 
-        void addRef(Dsymbol s)
+        void addRef(T)(T s)
+            if (is(T : DMD.Dsymbol))
         {
             if (s is null) return;
 
             this.refs.require(cast(void*)s);
         }
 
-        void incrementRef(Dsymbol s)
+        void incrementRef(T)(T s)
+            if (is(T : DMD.Dsymbol))
         {
             if (s is null) return;
 
@@ -45,7 +41,7 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
         }
 
         /// number of imports
-        size_t[Module] imported;
+        size_t[DMD.Module] imported;
 
         mixin(bitfields!(
             bool, "insideFunction", 1,
@@ -56,12 +52,12 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
     /// visit context
     Context context;
     /// scope tracker
-    ScopeTracker scopeTracker;
+    DMD.ScopeTracker scopeTracker;
 
-    override void visit(Module m)
+    override void visit(Querier!(DMD.Module) m)
     {
         // lets skip invalid modules
-        if (!isValid(m)) return;
+        if (!m.isValid()) return;
 
         auto sc = scopeTracker.track(m);
         scope(exit) scopeTracker.untrack(m, sc);
@@ -76,7 +72,7 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
             // there is references to this symbol
             if (num > 0) continue;
 
-            auto sym = cast(Dsymbol)osym;
+            auto sym = cast(DMD.Dsymbol)osym;
             assert(sym, "must be a Dsymbol");
 
             string prefix;
@@ -88,9 +84,9 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
         }
     }
 
-    override void visit(CallExp e)
+    override void visit(Querier!(DMD.CallExp) e)
     {
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
         super.visit(e);
 
@@ -99,60 +95,62 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
             context.incrementRef(e.f);
     }
 
-    override void visit(VarExp e)
+    override void visit(Querier!(DMD.VarExp) e)
     {
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
         super.visit(e);
 
         context.incrementRef(e.var);
     }
 
-    override void visit(ThisExp e)
+    override void visit(Querier!(DMD.ThisExp) e)
     {
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
         super.visit(e);
 
         context.incrementRef(e.var);
     }
 
-    override void visit(DotVarExp e)
+    override void visit(Querier!(DMD.DotVarExp) e)
     {
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
         super.visit(e);
 
         context.incrementRef(e.var);
     }
 
-    override void visit(SymOffExp e)
+    override void visit(Querier!(DMD.SymOffExp) e)
     {
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
         super.visit(e);
 
         context.incrementRef(e.var);
     }
 
-    override void visit(SymbolExp e)
+    override void visit(Querier!(DMD.SymbolExp) e)
     {
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
         super.visit(e);
 
         context.incrementRef(e.var);
     }
 
-    override void visit(Import imp)
+    override void visit(Querier!(DMD.Import) imp)
     {
         // ignore special object module import
-        if (imp.id == Id.object) return;
+        if (imp.id == DMD.Id.object) return;
     }
 
-    override void visit(VarDeclaration vd)
+    override void visit(Querier!(DMD.VarDeclaration) vd)
     {
-        if (!isValid(vd)) return;
+        import std.algorithm : startsWith;
+
+        if (!vd.isValid()) return;
 
         super.visit(vd);
 
@@ -161,15 +159,15 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
 
         final switch(vd.visibility.kind)
         {
-            case Visibility.Kind.private_:
-            case Visibility.Kind.none:
+            case DMD.Visibility.Kind.private_:
+            case DMD.Visibility.Kind.none:
                 break;
 
-            case Visibility.Kind.protected_:
-            case Visibility.Kind.public_:
-            case Visibility.Kind.export_:
-            case Visibility.Kind.undefined:
-            case Visibility.Kind.package_:
+            case DMD.Visibility.Kind.protected_:
+            case DMD.Visibility.Kind.public_:
+            case DMD.Visibility.Kind.export_:
+            case DMD.Visibility.Kind.undefined:
+            case DMD.Visibility.Kind.package_:
                 if (scopeTracker.functionDepth > 0) break;
 
                 return;
@@ -188,17 +186,17 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
         // FIXME: Use expression lookup table for enums, disable them for now
 
         // skip temporary variables
-        if (vd.storage_class & STC.temp) return;
+        if (vd.isGenerated()) return;
         // skip enums
-        if (vd.storage_class & STC.manifest) return;
+        if (vd.storage_class & DMD.STC.manifest) return;
 
         context.addRef(vd);
     }
 
-    override void visit(FuncDeclaration fd)
+    override void visit(Querier!(DMD.FuncDeclaration) fd)
     {
         // lets skip invalid functions
-        if (!isValid(fd)) return;
+        if (!fd.isValid()) return;
 
         auto sc = scopeTracker.track(fd);
         scope(exit) scopeTracker.untrack(fd, sc);
@@ -207,16 +205,16 @@ extern(C++) final class UnusedCheckVisitor : DFSPluginVisitor
         {
             final switch(fd.visibility.kind)
             {
-                case Visibility.Kind.private_:
-                case Visibility.Kind.none:
+                case DMD.Visibility.Kind.private_:
+                case DMD.Visibility.Kind.none:
                     context.addRef(fd);
                     break;
 
-                case Visibility.Kind.protected_:
-                case Visibility.Kind.public_:
-                case Visibility.Kind.export_:
-                case Visibility.Kind.undefined:
-                case Visibility.Kind.package_:
+                case DMD.Visibility.Kind.protected_:
+                case DMD.Visibility.Kind.public_:
+                case DMD.Visibility.Kind.export_:
+                case DMD.Visibility.Kind.undefined:
+                case DMD.Visibility.Kind.package_:
                     break;
             }
         }

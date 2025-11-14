@@ -1,57 +1,49 @@
 module ldclint.checks.mayoverflow;
 
-import ldclint.visitors;
-import ldclint.dmd.astutility;
+import ldclint.utils.querier : Querier, querier;
+import ldclint.utils.report;
 
-import dmd.dmodule;
-import dmd.declaration;
-import dmd.dimport;
-import dmd.dsymbol;
-import dmd.func;
-import dmd.errors;
-import dmd.id;
-import dmd.expression;
-import dmd.statement;
-import dmd.mtype;
-import dmd.astenums;
+import DMD = ldclint.dmd;
 
-import std.stdio;
-import std.string;
-import std.array;
-import std.range;
-import std.bitmanip;
+import std.typecons : No, Yes, Flag;
 
-extern(C++) final class MayOverflowCheckVisitor : DFSPluginVisitor
+enum Metadata = imported!"ldclint.checks".Metadata(
+    "mayoverflow",
+    No.byDefault,
+);
+
+final class Check : imported!"ldclint.checks".GenericCheck!Metadata
 {
-    alias visit = DFSPluginVisitor.visit;
+    alias visit = imported!"ldclint.checks".GenericCheck!Metadata.visit;
 
-    override void visit(CastExp e)
+    override void visit(Querier!(DMD.CastExp) e)
     {
+        // traverse through the AST
         super.visit(e);
 
-        // lets skip invalid casts
-        if (!isValid(e)) return;
+        // lets skip invalid vars
+        if (!e.isValid()) return;
+
+        // skip unresolved variables
+        if (!e.isResolved()) return;
 
         if (auto mule = e.e1.isMulExp())
-            visitCasted(mule, e.to);
+            visitCasted(querier(mule), querier(e.to));
     }
 
-    private void visitCasted(MulExp e, Type type)
+    private void visitCasted(Querier!(DMD.MulExp) e, Querier!(DMD.Type) type)
     {
         // lets skip invalid assignments
-        if (!isValid(e)) return;
+        if (!e.isValid()) return;
 
-        // don't warn about null expressions
-        if (!e.e1 || !e.e2) return;
+        // don't warn about unresolved expressions
+        if (!e.lhs.isResolved() || !e.rhs.isResolved()) return;
 
-        // don't try to get types
-        if (!e.e1.type || !e.e2.type) return;
-
-        Type t1 = e.e1.type.toBasetype();
-        Type t2 = e.e2.type.toBasetype();
+        auto lhsType = e.lhs.type.baseType();
+        auto rhsType = e.rhs.type.baseType();
 
         // if they are not scalars, lets skip it
-        if (!t1.isscalar || !t2.isscalar) return;
+        if (!lhsType.isScalarType.get || !rhsType.isScalarType.get) return;
 
         if (auto re1 = e.e1.isRealExp())
         {
@@ -60,7 +52,7 @@ extern(C++) final class MayOverflowCheckVisitor : DFSPluginVisitor
         }
         else if (auto ie1 = e.e1.isIntegerExp())
         {
-            if (t1.isunsigned)
+            if (lhsType.isUnsignedType.get)
             {
                 ulong u1 = ie1.toUInteger();
                 if (u1 <= 1) return;
@@ -79,7 +71,7 @@ extern(C++) final class MayOverflowCheckVisitor : DFSPluginVisitor
         }
         else if (auto ie2 = e.e2.isIntegerExp())
         {
-            if (t2.isunsigned)
+            if (rhsType.isUnsignedType.get)
             {
                 ulong u2 = ie2.toUInteger();
                 if (u2 <= 1) return;
@@ -91,10 +83,10 @@ extern(C++) final class MayOverflowCheckVisitor : DFSPluginVisitor
             }
         }
 
-        auto s1 = t1.size();
-        auto s2 = t2.size();
+        auto s1 = lhsType.size().get;
+        auto s2 = rhsType.size().get;
 
-        auto castSize = type.size();
+        auto castSize = type.size().get;
 
         if (s1 < castSize && s2 < castSize)
         {

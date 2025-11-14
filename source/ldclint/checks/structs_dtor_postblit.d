@@ -1,52 +1,39 @@
 module ldclint.checks.structs_dtor_postblit;
 
-import ldclint.visitors;
+import ldclint.utils.querier : Querier;
+import ldclint.utils.report;
 
-import dmd.visitor;
-import dmd.dmodule;
-import dmd.declaration;
-import dmd.dimport;
-import dmd.dsymbol;
-import dmd.func;
-import dmd.errors;
-import dmd.id;
-import dmd.expression;
-import dmd.statement;
-import dmd.dstruct;
+import DMD = ldclint.dmd;
 
-import std.stdio;
-import std.string;
+import std.typecons : No, Yes, Flag;
 
-extern(C++) final class StructDtorPostblitCheckVisitor : DFSPluginVisitor
+enum Metadata = imported!"ldclint.checks".Metadata(
+    "struct-dtorpostblit",
+    Yes.byDefault,
+);
+
+final class Check : imported!"ldclint.checks".GenericCheck!Metadata
 {
-    alias visit = DFSPluginVisitor.visit;
+    alias visit = imported!"ldclint.checks".GenericCheck!Metadata.visit;
 
-    override void visit(StructDeclaration sd)
+    override void visit(Querier!(DMD.StructDeclaration) sd)  { visit!DMD(sd); }
+
+    private void visit(alias M)(Querier!(M.StructDeclaration) sd)
     {
-        if (!isValid(sd)) return;
+        // skip unresolved symbols
+        if (!sd.isResolved) return;
 
         super.visit(sd);
 
         // skip structs that have disabled postblits
-        if (sd.postblits.length && sd.postblits[0].isDisabled)
+        if (sd.hasPostblit.get && sd.postblits[0].isDisabled)
             return;
 
-        bool hasUserDefinedPostblit;
-        foreach(p; sd.postblits)
-        {
-            if (p.ident == Id.postblit)
-            {
-                hasUserDefinedPostblit = true;
-                break;
-            }
-        }
+        auto hasUserDefinedCopyCtor = sd.hasUserPostblit.get || sd.hasCopyConstructor.get;
 
-        auto hasUserDefinedCopyCtor = hasUserDefinedPostblit || sd.hasCopyCtor;
-        auto hasUserDefinedDtors = sd.userDtors.length > 0;
-
-        if (hasUserDefinedCopyCtor && !hasUserDefinedDtors)
+        if (hasUserDefinedCopyCtor && !sd.hasUserDestructor.get)
             warning(sd.loc, "user defined copy construction defined but no destructor");
-        else if (!hasUserDefinedCopyCtor && hasUserDefinedDtors)
+        else if (!hasUserDefinedCopyCtor && sd.hasUserDestructor.get)
             warning(sd.loc, "user defined destructor defined but no copy construction");
     }
 }

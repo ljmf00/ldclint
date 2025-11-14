@@ -1,37 +1,29 @@
 module ldclint.checks.atproperty;
 
-import ldclint.visitors;
+import ldclint.utils.querier : Querier;
+import ldclint.utils.report;
 
-import dmd.dmodule;
-import dmd.declaration;
-import dmd.dimport;
-import dmd.dsymbol;
-import dmd.func;
-import dmd.errors;
-import dmd.id;
-import dmd.expression;
-import dmd.statement;
-import dmd.mtype;
-import dmd.astenums;
+import DMD = ldclint.dmd;
 
-import std.stdio;
-import std.string;
-import std.array;
-import std.range;
-import std.bitmanip;
+import std.typecons : No, Yes, Flag;
 
-extern(C++) final class AtPropertyCheckVisitor : DFSPluginVisitor
+enum Metadata = imported!"ldclint.checks".Metadata(
+    "atproperty",
+    No.byDefault,
+);
+
+final class Check : imported!"ldclint.checks".GenericCheck!Metadata
 {
-    alias visit = DFSPluginVisitor.visit;
+    alias visit = imported!"ldclint.checks".GenericCheck!Metadata.visit;
 
-    override void visit(FuncDeclaration fd)
+    override void visit(Querier!(DMD.FuncDeclaration) fd)
     {
-        // lets skip invalid functions
-        if (!isValid(fd)) return;
+        // lets skip invalid/unresolved functions
+        if (!fd.isResolved) return;
 
         if (fd.type.isTypeFunction().isproperty
-            || fd.storage_class & STC.property
-            || fd.storage_class2 & STC.property)
+            || fd.storage_class & DMD.STC.property
+            || fd.storage_class2 & DMD.STC.property)
             warning(fd.loc, "Avoid the usage of `@property` attribute");
 
         // traverse through the AST

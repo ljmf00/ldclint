@@ -1,6 +1,7 @@
-module ldclint.dparseast;
+module ldclint.dparse;
 
 import ldclint.options;
+import ldclint.utils.report;
 
 import dparse.rollback_allocator : RollbackAllocator;
 import dparse.parser;
@@ -8,16 +9,15 @@ import dparse.lexer;
 import dparse.ast;
 import dparse.formatter;
 
-import ldclint.dmd.location;
-import dmd.errors;
-static import dmd.dmodule;
-
 import std.conv : to;
+import std.typecons : Flag;
 import std.string : toStringz;
+
+import DMD = ldclint.dmd;
 
 private __gshared Module[void*] dparseMap;
 
-Module dparseModule(ref Options options, dmd.dmodule.Module mod, string filename)
+Module dparseModule(Flag!"parserErrors" parserErrors, DMD.Module mod, string filename)
 {
     if (!mod) return null;
 
@@ -50,9 +50,9 @@ Module dparseModule(ref Options options, dmd.dmodule.Module mod, string filename
         bool err,
     )
     {
-        if (options.parserCheck)
+        if (parserErrors)
         {
-            auto loc = Loc(toStringz(fileName), lineNumber.to!uint, columnNumber.to!uint);
+            auto loc = DMD.Loc(toStringz(fileName), lineNumber.to!uint, columnNumber.to!uint);
             if (err) error(loc, toStringz(message));
             else     warning(loc, toStringz(message));
         }
