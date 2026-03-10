@@ -105,4 +105,5 @@ mixin plugin!(
     imported!"ldclint.checks.stack",
     imported!"ldclint.checks.coherence",
     imported!"ldclint.checks.fortify",
+    imported!"ldclint.checks.ctags",
 );
